@@ -1,0 +1,11 @@
+flask
+flask-sqlalchemy
+flask-migrate
+python-dotenv
+authlib
+pymysql
+requests
+pytest
+pytest-flask
+flask-login
+flask-jwt-extended
