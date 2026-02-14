@@ -16,4 +16,5 @@ dependencies = [
     "flask-jwt-extended>=4.6.0",
     "flask-cors>=4.0.0",
     "waitress>=3.0.0",
+    "faker>=35.2.2",
 ]
