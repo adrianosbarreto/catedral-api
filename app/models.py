@@ -36,7 +36,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(255))
     membro_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
 
     membro = db.relationship('Membro', backref=db.backref('user', uselist=False))
@@ -97,7 +97,7 @@ class Membro(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120))
     telefone = db.Column(db.String(20))
-    cpf = db.Column(db.String(11))
+    cpf = db.Column(db.String(20))
     estado_civil = db.Column(db.String(20))
     data_batismo = db.Column(db.Date)
     data_nascimento = db.Column(db.Date)

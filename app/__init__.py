@@ -35,7 +35,12 @@ def create_app(config_name='default'):
         print("🔧 [DEBUG] Subpath não definido, servindo na raiz (/)")
 
     from flask_cors import CORS
-    CORS(app)
+    # Permitir origens específicas ou todas (mais seguro para produção com subdomains variados)
+    CORS(app, resources={r"/*": {
+        "origins": ["https://www.liderfoursquare.com.br", "http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"]
+    }})
 
     from datetime import timedelta
     from flask_jwt_extended import JWTManager
