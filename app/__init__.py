@@ -16,11 +16,13 @@ def create_app(config_name='default'):
     # Configurar subpath usando DispatcherMiddleware se definido no ambiente
     subpath = os.environ.get('APPLICATION_SUBPATH', '').rstrip('/')
     if subpath:
+        print(f"🔧 [DEBUG] Ativando subpath: {subpath}")
         from werkzeug.middleware.dispatcher import DispatcherMiddleware
         from werkzeug.wrappers import Response
         
         # Aplicação dummy para a raiz (retorna 404)
         def simple_app(environ, start_response):
+            print(f"🔧 [DEBUG] Request na raiz (fora do subpath): {environ.get('PATH_INFO')}")
             response = Response('Not Found', status=404)
             return response(environ, start_response)
         
@@ -28,6 +30,9 @@ def create_app(config_name='default'):
         app.wsgi_app = DispatcherMiddleware(simple_app, {
             subpath: app.wsgi_app
         })
+        print(f"🔧 [DEBUG] DispatcherMiddleware configurado em {subpath}")
+    else:
+        print("🔧 [DEBUG] Subpath não definido, servindo na raiz (/)")
 
     from flask_cors import CORS
     CORS(app)

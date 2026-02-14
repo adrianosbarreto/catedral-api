@@ -14,12 +14,16 @@ if __name__ == '__main__':
     host = os.environ.get('SERVER_HOST', '0.0.0.0')
     port = int(os.environ.get('SERVER_PORT', 5000))
     
+    subpath = os.environ.get('APPLICATION_SUBPATH', '')
+    url_completa = f"http://{host}:{port}{subpath}"
+    
     print(f"\n{'='*60}")
     print(f"🚀 Igreja em Foco Backend - Servidor de Produção")
     print(f"{'='*60}")
     print(f"📍 Host: {host}")
     print(f"🔌 Porta: {port}")
-    print(f"🌐 URL: http://{host}:{port}")
+    print(f"🌐 URL Base: {url_completa}")
+    print(f"🔑 Admin: admin / admin123")
     print(f"{'='*60}\n")
     
     # Iniciar servidor Waitress
