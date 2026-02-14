@@ -13,20 +13,21 @@ def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     
-    # Configurar APPLICATION_ROOT se definido no ambiente
-    application_root = os.environ.get('APPLICATION_ROOT', '').rstrip('/')
-    if application_root:
-        app.config['APPLICATION_ROOT'] = application_root
+    # Configurar subpath usando DispatcherMiddleware se definido no ambiente
+    subpath = os.environ.get('APPLICATION_SUBPATH', '').rstrip('/')
+    if subpath:
+        from werkzeug.middleware.dispatcher import DispatcherMiddleware
+        from werkzeug.wrappers import Response
         
-        # Configurar ProxyFix para funcionar corretamente com proxy reverso
-        from werkzeug.middleware.proxy_fix import ProxyFix
-        app.wsgi_app = ProxyFix(
-            app.wsgi_app,
-            x_for=1,
-            x_proto=1,
-            x_host=1,
-            x_prefix=1
-        )
+        # Aplicação dummy para a raiz (retorna 404)
+        def simple_app(environ, start_response):
+            response = Response('Not Found', status=404)
+            return response(environ, start_response)
+        
+        # Montar a aplicação Flask no subpath
+        app.wsgi_app = DispatcherMiddleware(simple_app, {
+            subpath: app.wsgi_app
+        })
 
     from flask_cors import CORS
     CORS(app)
