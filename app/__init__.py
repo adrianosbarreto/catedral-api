@@ -17,7 +17,8 @@ def create_app(config_name='default'):
 
     from datetime import timedelta
     from flask_jwt_extended import JWTManager
-    app.config['JWT_SECRET_KEY'] = 'super-secret-key' # Change this in prod
+    import os
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-key')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
     jwt = JWTManager(app)
 
