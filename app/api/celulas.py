@@ -15,7 +15,7 @@ def get_celulas():
 
     from app.scopes import CellScope
     
-    query = Celula.query
+    query = Celula.query.filter_by(ativo=True)
     query = CellScope.apply(query, user)
     
     celulas_list = query.all()
@@ -78,10 +78,11 @@ def delete_celula(id):
     if not celula:
         return jsonify({'error': 'Not found'}), 404
         
-    db.session.delete(celula)
+    # Soft delete instead of hard delete
+    celula.ativo = False
     try:
         db.session.commit()
-        return jsonify({'message': 'Deleted successfully'})
+        return jsonify({'message': 'Inactivated successfully'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

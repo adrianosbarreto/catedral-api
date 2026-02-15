@@ -5,13 +5,13 @@ from app.models import db, Ide, Membro
 from app.decorators import requires_role
 
 @api.route('/ides', methods=['GET'])
-@requires_role(['admin', 'pastor'])
+@jwt_required()
 def get_ides():
     ides = Ide.query.all()
     return jsonify([ide.to_dict() for ide in ides])
 
 @api.route('/ides/<int:id>', methods=['GET'])
-@requires_role(['admin', 'pastor'])
+@jwt_required()
 def get_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:
@@ -19,7 +19,7 @@ def get_ide(id):
     return jsonify(ide.to_dict())
 
 @api.route('/ides', methods=['POST'])
-@requires_role(['admin', 'pastor'])
+@requires_role(['admin'])
 def create_ide():
     data = request.get_json() or {}
     
@@ -40,7 +40,7 @@ def create_ide():
         return jsonify({'error': str(e)}), 500
 
 @api.route('/ides/<int:id>', methods=['PUT'])
-@requires_role(['admin', 'pastor'])
+@requires_role(['admin'])
 def update_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:
@@ -59,7 +59,7 @@ def update_ide(id):
         return jsonify({'error': str(e)}), 500
 
 @api.route('/ides/<int:id>', methods=['DELETE'])
-@requires_role(['admin', 'pastor'])
+@requires_role(['admin'])
 def delete_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:

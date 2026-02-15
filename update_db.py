@@ -26,4 +26,20 @@ with app.app_context():
         db.session.rollback()
         print(f"Column 'batizado' might already exist or error: {e}")
 
+    try:
+        db.session.execute(text("ALTER TABLE membros ADD COLUMN supervisor_id INTEGER REFERENCES membros(id)"))
+        db.session.commit()
+        print("Column 'supervisor_id' added successfully.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Column 'supervisor_id' might already exist or error: {e}")
+
+    try:
+        db.session.execute(text("ALTER TABLE membros ADD COLUMN pastor_id INTEGER REFERENCES membros(id)"))
+        db.session.commit()
+        print("Column 'pastor_id' added successfully.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Column 'pastor_id' might already exist or error: {e}")
+
     print("Database sync complete.")

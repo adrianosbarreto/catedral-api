@@ -21,26 +21,27 @@ def get_membros():
     
     ide_id = request.args.get('ide_id', type=int)
     nome = request.args.get('nome')
+    cpf = request.args.get('cpf')
     estado_civil = request.args.get('estado_civil')
     lider_id = request.args.get('lider_id', type=int)
     
-    query = Membro.query
-    if user:
-        query = MembroScope.apply(query, user)
+    query = Membro.query.filter_by(ativo=True)
     
-    if role:
-        # Split by comma to support multiple roles filter
-        roles = [r.strip() for r in role.split(',')]
-        # Join with PapelMembro and filter using in_
-        query = query.join(Membro.papeis).filter(PapelMembro.papel.in_(roles))
+    # Se for busca por CPF, tentamos busca global (para transferência)
+    # Mas apenas se o usuário tiver papel de liderança
+    if cpf and user and user.role in ['admin', 'pastor', 'pastor_de_rede', 'supervisor', 'lider_de_celula']:
+        query = query.filter(Membro.cpf == cpf)
+    else:
+        if user:
+            query = MembroScope.apply(query, user)
+        
+        if nome:
+            query = query.filter(Membro.nome.ilike(f'%{nome}%'))
+            
+        if cpf:
+            query = query.filter(Membro.cpf == cpf)
 
-    if ide_id:
-        query = query.filter(Membro.ide_id == ide_id)
-        
-    if nome:
-        query = query.filter(Membro.nome.ilike(f'%{nome}%'))
-        
-    if estado_civil:
+    if role:
         # Check if the DB value contains the filter string (e.g. 'solteiro' in 'Solteiro(a)')
         query = query.filter(Membro.estado_civil.ilike(f'%{estado_civil}%'))
 
@@ -86,6 +87,8 @@ def create_membro():
     membro.sexo = data.get('sexo')
     membro.ide_id = parse_id(data.get('ide_id'))
     membro.lider_id = parse_id(data.get('lider_id'))
+    membro.supervisor_id = parse_id(data.get('supervisor_id'))
+    membro.pastor_id = parse_id(data.get('pastor_id'))
     membro.tipo = data.get('tipo', 'membro')
     membro.batizado = data.get('batizado', False)
     
@@ -148,6 +151,8 @@ def update_membro(id):
     if 'sexo' in data: membro.sexo = data['sexo']
     if 'ide_id' in data: membro.ide_id = parse_id(data['ide_id'])
     if 'lider_id' in data: membro.lider_id = parse_id(data['lider_id'])
+    if 'supervisor_id' in data: membro.supervisor_id = parse_id(data['supervisor_id'])
+    if 'pastor_id' in data: membro.pastor_id = parse_id(data['pastor_id'])
     if 'ativo' in data: membro.ativo = data['ativo']
     if 'tipo' in data: membro.tipo = data['tipo']
     if 'batizado' in data: membro.batizado = data['batizado']
@@ -193,9 +198,14 @@ def delete_membro(id):
     if not membro:
         return jsonify({'error': 'Not found'}), 404
         
-    db.session.delete(membro)
-    db.session.commit()
-    return jsonify({'message': 'Deleted successfully'})
+    # Soft delete
+    membro.ativo = False
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Inactivated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @api.route('/stats/dashboard', methods=['GET'])
 @jwt_required()

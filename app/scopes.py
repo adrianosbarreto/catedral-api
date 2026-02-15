@@ -83,7 +83,7 @@ class MembroScope:
             from app.models import Membro
             return query.filter(Membro.ide_id.in_(my_ide_ids))
 
-        # 3. Supervisor: View members in the cells they supervise
+        # 3. Supervisor: View members in the cells they supervise + the leaders themselves
         if role_name == 'supervisor':
             from app.models import Celula, Membro
             # Get cells supervised by this person
@@ -93,10 +93,18 @@ class MembroScope:
                 if c.lider_id: lider_ids.append(c.lider_id)
                 if c.vice_lider_id: lider_ids.append(c.vice_lider_id)
             
-            if not lider_ids:
-                return query.filter(Membro.id == membro_id)
+            # Use direct query filtering to build a broader set
+            # 1. The supervisor themselves
+            # 2. Members who report directly to the supervisor (the leaders)
+            # 3. Members who report to the leaders supervised by the supervisor
+            # 4. The leaders themselves (redundant with #2 but explicit)
             
-            return query.filter(Membro.lider_id.in_(lider_ids) | (Membro.id == membro_id))
+            return query.filter(
+                (Membro.id == membro_id) | 
+                (Membro.lider_id == membro_id) | 
+                (Membro.lider_id.in_(lider_ids) if lider_ids else False) |
+                (Membro.id.in_(lider_ids) if lider_ids else False)
+            ).distinct()
             
         # 4. Lider: View own cell members (those who report to them)
         if role_name in ['lider_de_celula', 'vice_lider_de_celula']:

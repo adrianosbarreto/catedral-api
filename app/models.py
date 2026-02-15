@@ -47,6 +47,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(255))
     membro_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
+    requer_troca_senha = db.Column(db.Boolean, default=False)
 
     membro = db.relationship('Membro', backref=db.backref('user', uselist=False))
 
@@ -118,9 +119,13 @@ class Membro(db.Model):
     
     ide_id = db.Column(db.Integer, db.ForeignKey('ides.id'))
     lider_id = db.Column(db.Integer, db.ForeignKey('membros.id'))
+    supervisor_id = db.Column(db.Integer, db.ForeignKey('membros.id'))
+    pastor_id = db.Column(db.Integer, db.ForeignKey('membros.id'))
     
     ide = db.relationship('Ide', foreign_keys=[ide_id], backref='membros')
-    lider = db.relationship('Membro', remote_side=[id], backref='liderados')
+    lider = db.relationship('Membro', foreign_keys=[lider_id], remote_side=[id], backref='liderados')
+    supervisor = db.relationship('Membro', foreign_keys=[supervisor_id], remote_side=[id], backref='supervisionados')
+    pastor_id_rel = db.relationship('Membro', foreign_keys=[pastor_id], remote_side=[id], backref='pastoreados')
     enderecos = db.relationship('Endereco', backref='membro', lazy='dynamic', cascade='all, delete-orphan')
     papeis = db.relationship('PapelMembro', backref='membro', lazy='dynamic', cascade='all, delete-orphan')
 
@@ -138,8 +143,12 @@ class Membro(db.Model):
             'ativo': self.ativo,
             'ide_id': self.ide_id,
             'lider_id': self.lider_id,
+            'supervisor_id': self.supervisor_id,
+            'pastor_id': self.pastor_id,
             'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
             'lider': {'id': self.lider.id, 'nome': self.lider.nome} if self.lider else None,
+            'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome} if self.supervisor else None,
+            'pastor': {'id': self.pastor_id_rel.id, 'nome': self.pastor_id_rel.nome} if self.pastor_id_rel else None,
             'enderecos': [e.to_dict() for e in self.enderecos],
             'papeis_membros': [p.to_dict() for p in self.papeis],
             'tipo': self.tipo,
@@ -255,6 +264,7 @@ class Celula(db.Model):
     cidade = db.Column(db.String(50), nullable=True)
     estado = db.Column(db.String(2), nullable=True)
     cep = db.Column(db.String(10), nullable=True)
+    ativo = db.Column(db.Boolean, default=True)
     
     # Relationships
     ide = db.relationship('Ide', foreign_keys=[ide_id], backref='celulas')
@@ -269,7 +279,12 @@ class Celula(db.Model):
             'ide_id': self.ide_id,
             'supervisor_id': self.supervisor_id,
             'lider_id': self.lider_id,
+            'pastor_id': self.ide.pastor_id if self.ide else None,
             'vice_lider_id': self.vice_lider_id,
+            'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
+            'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome} if self.supervisor else None,
+            'lider': {'id': self.lider.id, 'nome': self.lider.nome} if self.lider else None,
+            'pastor': {'id': self.ide.pastor.id, 'nome': self.ide.pastor.nome} if self.ide and self.ide.pastor else None,
             'dia_reuniao': self.dia_reuniao,
             'horario_reuniao': self.horario_reuniao,
             'logradouro': self.logradouro,
@@ -278,7 +293,9 @@ class Celula(db.Model):
             'bairro': self.bairro,
             'cidade': self.cidade,
             'estado': self.estado,
+            'estado': self.estado,
             'cep': self.cep,
+            'ativo': self.ativo,
             'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
             'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome, 'telefone': self.supervisor.telefone} if self.supervisor else None,
             'lider': {'id': self.lider.id, 'nome': self.lider.nome, 'telefone': self.lider.telefone} if self.lider else None,
@@ -342,4 +359,38 @@ class FrequenciaCelula(db.Model):
             'membro_nucleo_id': self.membro_nucleo_id,
             'data': self.data.isoformat(),
             'presente': self.presente
+        }
+class SolicitacaoTransferencia(db.Model):
+    __tablename__ = 'solicitacoes_transferencia'
+    id = db.Column(db.Integer, primary_key=True)
+    membro_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=False)
+    de_nucleo_id = db.Column(db.Integer, db.ForeignKey('nucleos.id'), nullable=True) # Pode ser nulo se não estava em célula
+    para_nucleo_id = db.Column(db.Integer, db.ForeignKey('nucleos.id'), nullable=False)
+    solicitante_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='pendente') # 'pendente', 'aceito', 'recusado'
+    data_solicitacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_resposta = db.Column(db.DateTime, nullable=True)
+    motivo_recusa = db.Column(db.Text, nullable=True)
+
+    membro = db.relationship('Membro', foreign_keys=[membro_id], backref='solicitacoes_transferencia')
+    de_nucleo = db.relationship('Nucleo', foreign_keys=[de_nucleo_id])
+    para_nucleo = db.relationship('Nucleo', foreign_keys=[para_nucleo_id])
+    solicitante = db.relationship('User', foreign_keys=[solicitante_id])
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'membro_id': self.membro_id,
+            'membro_nome': self.membro.nome if self.membro else None,
+            'de_nucleo_id': self.de_nucleo_id,
+            'de_nucleo_nome': self.de_nucleo.nome if self.de_nucleo else "Nenhum",
+            'de_celula_nome': self.de_nucleo.celula.nome if self.de_nucleo and self.de_nucleo.celula else "Nenhuma",
+            'para_nucleo_id': self.para_nucleo_id,
+            'para_nucleo_nome': self.para_nucleo.nome if self.para_nucleo else None,
+            'para_celula_nome': self.para_nucleo.celula.nome if self.para_nucleo and self.para_nucleo.celula else None,
+            'solicitante_id': self.solicitante_id,
+            'solicitante_nome': self.solicitante.membro.nome if self.solicitante and self.solicitante.membro else self.solicitante.username,
+            'status': self.status,
+            'data_solicitacao': self.data_solicitacao.isoformat(),
+            'data_resposta': self.data_resposta.isoformat() if self.data_resposta else None
         }
