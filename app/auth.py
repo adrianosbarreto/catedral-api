@@ -26,14 +26,33 @@ def generate_invite():
     user = db.session.get(User, current_user_id)
     
     # Check if user can generate invite (Pastor or Supervisor)
-    allowed_roles = ['pastor', 'supervisor', 'admin']
+    allowed_roles = ['pastor', 'pastor_de_rede', 'supervisor', 'admin']
     if user.role not in allowed_roles:
         return jsonify({'error': 'Ação não permitida para seu cargo'}), 403
 
     data = request.get_json()
     ide_id = data.get('ide_id')
+    papel_destino = data.get('papel_destino')
+    supervisor_id = data.get('supervisor_id') # Opcional: só para Pastor convidando Líder
+
+    # Validação de Hierarquia
+    hierarchy = {
+        'admin': ['pastor_de_rede', 'supervisor', 'lider_de_celula', 'vice_lider_de_celula'],
+        'pastor_de_rede': ['supervisor', 'lider_de_celula'],
+        'pastor': ['supervisor', 'lider_de_celula'],
+        'supervisor': ['lider_de_celula'],
+        'lider_de_celula': ['vice_lider_de_celula']
+    }
+
+    user_role = user.role
+    if user_role not in hierarchy:
+        return jsonify({'error': f'Seu cargo ({user_role}) não tem permissão para gerar convites'}), 403
+
+    if papel_destino not in hierarchy.get(user_role, []):
+        return jsonify({'error': f'Você não tem permissão para convidar um {papel_destino}'}), 403
+
     if not ide_id:
-        # Default to user's IDE if supervisor
+        # Default to user's IDE if supervisor/pastor
         if user.membro and user.membro.ide_id:
             ide_id = user.membro.ide_id
         elif user.role == 'admin':
@@ -45,7 +64,6 @@ def generate_invite():
         return jsonify({'error': 'IDE_ID é obrigatório'}), 400
 
     now = datetime.utcnow()
-    # "expire no proximo dia" -> Tomorrow at 23:59:59
     data_expiracao = (now + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     token = secrets.token_urlsafe(16)
@@ -53,7 +71,9 @@ def generate_invite():
         token=token,
         ide_id=ide_id,
         criado_por_id=user.id,
-        data_expiracao=data_expiracao
+        data_expiracao=data_expiracao,
+        papel_destino=papel_destino,
+        supervisor_destino_id=supervisor_id
     )
     db.session.add(invite)
     try:
@@ -78,20 +98,26 @@ def register():
     invite = None
     ide_id = data.get('ide_id')
 
+    papel = data.get('papel')
+
     if token:
         invite = Convite.query.filter_by(token=token).first()
         if not invite or not invite.esta_valido():
             return jsonify({'error': 'Token de convite inválido ou expirado'}), 400
         
         ide_id = invite.ide_id
+        # Forçar o papel que o convite determinou
+        if invite.papel_destino:
+            papel = invite.papel_destino
 
     if not ide_id:
         return jsonify({'error': 'IDE_ID é obrigatório (ou use um link de convite)'}), 400
 
-    # Restrict roles for self-registration
-    allowed_roles = ['supervisor', 'lider_de_celula', 'vice_lider_de_celula']
-    if data['papel'] not in allowed_roles:
-        return jsonify({'error': 'Invalid role for self-registration'}), 403
+    # Restrict roles for self-registration if no token
+    if not token:
+        allowed_roles = ['supervisor', 'lider_de_celula', 'vice_lider_de_celula']
+        if papel not in allowed_roles:
+            return jsonify({'error': 'Invalid role for self-registration without token'}), 403
 
     # Check if user already exists
     if User.query.filter((User.email == data['email']) | (User.username == data['email'])).first():
@@ -107,6 +133,11 @@ def register():
                 return None
 
         # 1. Create Membro
+        lider_id = invite.criador.membro_id if invite and invite.criador else None
+        # Se houver um supervisor específico no convite, usa ele
+        if invite and invite.supervisor_destino_id:
+            lider_id = invite.supervisor_destino_id
+
         membro = Membro(
             nome=data['nome'],
             email=data['email'],
@@ -117,14 +148,15 @@ def register():
             data_nascimento=parse_date(data.get('data_nascimento')),
             data_batismo=parse_date(data.get('data_batismo')),
             ide_id=ide_id,
+            lider_id=lider_id,
             ativo=True
         )
         db.session.add(membro)
         db.session.flush()
 
         # 2. Add Role
-        papel = PapelMembro(membro_id=membro.id, papel=data['papel'])
-        db.session.add(papel)
+        papel_obj = PapelMembro(membro_id=membro.id, papel=papel)
+        db.session.add(papel_obj)
 
         # 3. Add Address
         endereco = Endereco(

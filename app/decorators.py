@@ -25,3 +25,28 @@ def requires_permission(permission_name):
             return fn(*args, **kwargs)
         return wrapper
     return decorator
+
+def requires_role(roles):
+    if isinstance(roles, str):
+        roles = [roles]
+        
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                verify_jwt_in_request()
+            except Exception as e:
+                return jsonify({'error': 'Missing or invalid token'}), 401
+            
+            user_id = get_jwt_identity()
+            user = db.session.get(User, user_id)
+            
+            if not user:
+                 return jsonify({'error': 'User not found'}), 404
+            
+            if user.role not in roles:
+                return jsonify({'error': 'Acesso negado para o seu cargo'}), 403
+            
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator

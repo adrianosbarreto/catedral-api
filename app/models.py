@@ -11,10 +11,13 @@ class Convite(db.Model):
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_expiracao = db.Column(db.DateTime, nullable=False)
-    usado = db.Column(db.Boolean, default=False) # Keep for stats, but won't block validation
+    papel_destino = db.Column(db.String(50), nullable=True) # Papel que o convidado terá
+    supervisor_destino_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True) # Supervisor imediato
+    usado = db.Column(db.Boolean, default=False)
 
     ide = db.relationship('Ide', backref='convites')
     criador = db.relationship('User', backref='convites_criados')
+    supervisor_destino = db.relationship('Membro', foreign_keys=[supervisor_destino_id])
 
     def esta_valido(self):
         agora = datetime.utcnow()
@@ -28,6 +31,12 @@ class Convite(db.Model):
             'ide_nome': self.ide.nome if self.ide else None,
             'data_criacao': self.data_criacao.isoformat(),
             'data_expiracao': self.data_expiracao.isoformat(),
+            'papel_destino': self.papel_destino,
+            'supervisor_destino_id': self.supervisor_destino_id,
+            'supervisor_destino_nome': self.supervisor_destino.nome if self.supervisor_destino else None,
+            'ide_pastor_nome': self.ide.pastor.nome if self.ide and self.ide.pastor else None,
+            'criado_por_nome': self.criador.membro.nome if self.criador and self.criador.membro else self.criador.username,
+            'criado_por_papel': self.criador.role,
             'valido': self.esta_valido()
         }
 

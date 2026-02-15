@@ -2,15 +2,16 @@ from flask import jsonify, request
 from flask_jwt_extended import jwt_required
 from app.api import api
 from app.models import db, Ide, Membro
+from app.decorators import requires_role
 
 @api.route('/ides', methods=['GET'])
-@jwt_required()
+@requires_role(['admin', 'pastor'])
 def get_ides():
     ides = Ide.query.all()
     return jsonify([ide.to_dict() for ide in ides])
 
 @api.route('/ides/<int:id>', methods=['GET'])
-@jwt_required()
+@requires_role(['admin', 'pastor'])
 def get_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:
@@ -18,7 +19,7 @@ def get_ide(id):
     return jsonify(ide.to_dict())
 
 @api.route('/ides', methods=['POST'])
-@jwt_required()
+@requires_role(['admin', 'pastor'])
 def create_ide():
     data = request.get_json() or {}
     
@@ -39,7 +40,7 @@ def create_ide():
         return jsonify({'error': str(e)}), 500
 
 @api.route('/ides/<int:id>', methods=['PUT'])
-@jwt_required()
+@requires_role(['admin', 'pastor'])
 def update_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:
@@ -58,7 +59,7 @@ def update_ide(id):
         return jsonify({'error': str(e)}), 500
 
 @api.route('/ides/<int:id>', methods=['DELETE'])
-@jwt_required()
+@requires_role(['admin', 'pastor'])
 def delete_ide(id):
     ide = db.session.get(Ide, id)
     if not ide:
