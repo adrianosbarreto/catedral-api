@@ -113,6 +113,7 @@ def register():
             telefone=data.get('telefone'),
             cpf=data['cpf'],
             estado_civil=data.get('estado_civil'),
+            sexo=data.get('sexo'),
             data_nascimento=parse_date(data.get('data_nascimento')),
             data_batismo=parse_date(data.get('data_batismo')),
             ide_id=ide_id,

@@ -37,7 +37,14 @@ def create_app(config_name='default'):
     from flask_cors import CORS
     # Permitir origens específicas ou todas (mais seguro para produção com subdomains variados)
     CORS(app, resources={r"/*": {
-        "origins": ["https://www.liderfoursquare.com.br", "http://localhost:5173"],
+        "origins": [
+            "https://www.liderfoursquare.com.br", 
+            "https://liderfoursquare.com.br",
+            "http://www.liderfoursquare.com.br",
+            "http://liderfoursquare.com.br",
+            "http://localhost:5173", 
+            "http://localhost:8080"
+        ],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"]
     }})
