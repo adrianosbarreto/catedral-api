@@ -24,21 +24,56 @@ class Convite(db.Model):
         return agora < self.data_expiracao
 
     def to_dict(self):
-        return {
-            'id': self.id,
-            'token': self.token,
-            'ide_id': self.ide_id,
-            'ide_nome': self.ide.nome if self.ide else None,
-            'data_criacao': self.data_criacao.isoformat(),
-            'data_expiracao': self.data_expiracao.isoformat(),
-            'papel_destino': self.papel_destino,
-            'supervisor_destino_id': self.supervisor_destino_id,
-            'supervisor_destino_nome': self.supervisor_destino.nome if self.supervisor_destino else None,
-            'ide_pastor_nome': self.ide.pastor.nome if self.ide and self.ide.pastor else None,
-            'criado_por_nome': self.criador.membro.nome if self.criador and self.criador.membro else self.criador.username,
-            'criado_por_papel': self.criador.role,
-            'valido': self.esta_valido()
-        }
+        try:
+            # Pegar dados básicos com segurança
+            token = getattr(self, 'token', None)
+            ide_id = getattr(self, 'ide_id', None)
+            
+            # Tentar pegar IDE
+            ide = getattr(self, 'ide', None)
+            ide_nome = getattr(ide, 'nome', None) if ide else None
+            
+            # Tentar pegar Supervisor
+            supervisor = getattr(self, 'supervisor_destino', None)
+            supervisor_nome = getattr(supervisor, 'nome', None) if supervisor else None
+            
+            # Tentar pegar Criador
+            criador = getattr(self, 'criador', None)
+            criador_membro = getattr(criador, 'membro', None) if criador else None
+            criador_nome = getattr(criador_membro, 'nome', None) if criador_membro else getattr(criador, 'username', 'N/A')
+            criador_role = getattr(criador, 'role', 'membro')
+            
+            data = {
+                'id': self.id,
+                'token': token,
+                'ide_id': ide_id,
+                'ide_nome': ide_nome,
+                'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
+                'data_expiracao': self.data_expiracao.isoformat() if self.data_expiracao else None,
+                'papel_destino': getattr(self, 'papel_destino', None),
+                'supervisor_destino_id': getattr(self, 'supervisor_destino_id', None),
+                'supervisor_destino_nome': supervisor_nome,
+                'criado_por_nome': criador_nome,
+                'criado_por_papel': criador_role,
+                'valido': self.esta_valido()
+            }
+            
+            # Tentar pegar Pastor da Unidade (IDE)
+            try:
+                pastor = getattr(ide, 'pastor', None) if ide else None
+                data['ide_pastor_nome'] = getattr(pastor, 'nome', None) if pastor else None
+            except Exception:
+                data['ide_pastor_nome'] = None
+                
+            return data
+        except Exception as e:
+            print(f"ERROR: Exception in Convite.to_dict: {e}")
+            return {
+                'id': getattr(self, 'id', None),
+                'error': 'Falha interna ao carregar convite'
+            }
+
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user' # Explicitly set table name to match default or ensuring consistency
@@ -85,16 +120,8 @@ class User(UserMixin, db.Model):
                 return True
         return False
 
-class Ide(db.Model):
-    __tablename__ = 'ides'
-    id = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(100), nullable=False)
 
-    def to_dict(self):
-        return {
-            'id': self.id, 
-            'nome': self.nome
-        }
+
 
 class Membro(db.Model):
     __tablename__ = 'membros'
@@ -147,8 +174,34 @@ class Membro(db.Model):
             'enderecos': [e.to_dict() for e in self.enderecos],
             'papeis_membros': [p.to_dict() for p in self.papeis],
             'tipo': self.tipo,
-            'batizado': self.batizado
+            'batizado': self.batizado,
+            'celulas_lideradas': [{'id': c.id, 'nome': c.nome} for c in self.celulas_lideradas if c.ativo],
+            'celulas_supervisionadas': [{'id': c.id, 'nome': c.nome} for c in self.celulas_supervisionadas if c.ativo]
         }
+
+
+class Ide(db.Model):
+    __tablename__ = 'ides'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False)
+    pastor_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
+
+    pastor = db.relationship('Membro', foreign_keys=[pastor_id])
+
+    def to_dict(self):
+        try:
+            return {
+                'id': self.id, 
+                'nome': self.nome,
+                'pastor_id': getattr(self, 'pastor_id', None),
+                'pastor_nome': getattr(self.pastor, 'nome', None) if getattr(self, 'pastor', None) else None
+            }
+        except Exception:
+            return {
+                'id': self.id,
+                'nome': self.nome
+            }
+
 
 class Endereco(db.Model):
     __tablename__ = 'enderecos'
@@ -308,7 +361,7 @@ class Nucleo(db.Model):
             'id': self.id,
             'nome': self.nome,
             'celula_id': self.celula_id,
-            'membros': [m.to_dict() for m in self.membros_nucleo]
+            'membros_nucleo': [m.to_dict() for m in self.membros_nucleo]
         }
 
 class MembroNucleo(db.Model):

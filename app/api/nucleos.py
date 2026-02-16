@@ -7,17 +7,17 @@ from datetime import datetime
 @api.route('/celulas/<int:celula_id>/nucleos', methods=['GET'])
 @jwt_required()
 def get_nucleos(celula_id):
-    # Ensure at least one nucleus exists for this cell
-    nucleo = Nucleo.query.filter_by(celula_id=celula_id).first()
-    if not nucleo:
+    nucleos = Nucleo.query.filter_by(celula_id=celula_id).all()
+    if not nucleos:
         celula = db.session.get(Celula, celula_id)
         if not celula:
             return jsonify({'error': 'Celula not found'}), 404
         nucleo = Nucleo(nome="Núcleo Principal", celula_id=celula_id)
         db.session.add(nucleo)
         db.session.commit()
+        nucleos = [nucleo]
     
-    return jsonify(nucleo.to_dict())
+    return jsonify([n.to_dict() for n in nucleos])
 
 @api.route('/celulas/<int:celula_id>/nucleos', methods=['POST'])
 @jwt_required()

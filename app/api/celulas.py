@@ -33,12 +33,41 @@ def get_celula(id):
 @jwt_required()
 def create_celula():
     current_user_id = get_jwt_identity()
+
+
     user = db.session.get(User, current_user_id)
     
-    if not user or user.role not in ['admin', 'pastor', 'pastor_de_rede', 'supervisor']:
-        return jsonify({'error': 'Unauthorized. Only pastors or supervisors can create cells.'}), 403
+    print(f"DEBUG CREATE CELL - User ID: {current_user_id}, User: {user.username if user else 'None'}, Role: {user.role if user else 'N/A'}, MembroID: {user.membro_id if user else 'N/A'}")
 
     data = request.get_json() or {}
+    
+    # Helper to parse ID from payload
+    def parse_id(val):
+        if val is None or val == "" or val == "none" or val == 0: return None
+        try: return int(val)
+        except: return None
+    
+    req_lider_id = parse_id(data.get('lider_id'))
+
+    # Permission check
+    is_management = user and user.role in ['admin', 'pastor', 'pastor_de_rede', 'supervisor']
+    is_self_leader = user and user.role == 'lider_de_celula' and user.membro_id == req_lider_id
+
+    if not (is_management or is_self_leader):
+        error_msg = f'Unauthorized. Role ({user.role if user else "None"}) cannot create cells'
+        if user and user.role == 'lider_de_celula':
+            error_msg += ' for other leaders (only for yourself).'
+        return jsonify({'error': error_msg}), 403
+
+    # Extra check for leaders: Limit of ONE active cell
+    if user and user.role == 'lider_de_celula':
+        existing_cell = Celula.query.filter_by(lider_id=user.membro_id, ativo=True).first()
+        if existing_cell:
+            return jsonify({'error': 'Você já possui uma célula ativa vinculada ao seu nome. Não é permitido criar mais de uma.'}), 400
+
+
+
+
     
     if not data.get('nome'):
         return jsonify({'error': 'Name is required'}), 400

@@ -85,12 +85,10 @@ class MembroScope:
             
             return query.filter(Membro.ide_id.in_(my_ide_ids))
 
-        # 3. Supervisor: View members in the cells they supervise + the leaders themselves
+        # 3. Supervisor: View members directly under their supervision + themselves
         if role_name == 'supervisor':
-            # Allow supervisors to see all members in their IDE to facilitate management and selection
-            if user.membro and user.membro.ide_id:
-                return query.filter(Membro.ide_id == user.membro.ide_id)
-            return query.filter_by(id=-1)
+            return query.filter((Membro.supervisor_id == membro_id) | (Membro.id == membro_id))
+
             
         # 4. Lider: View own cell members (those who report to them)
         if role_name in ['lider_de_celula', 'vice_lider_de_celula']:

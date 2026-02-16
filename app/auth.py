@@ -150,8 +150,11 @@ def register():
             data_batismo=parse_date(data.get('data_batismo')),
             ide_id=ide_id,
             lider_id=lider_id,
+            supervisor_id=lider_id if papel in ['lider_de_celula', 'vice_lider_de_celula'] else None,
+            pastor_id=invite.ide.pastor_id if invite and invite.ide else None,
             ativo=True
         )
+
         db.session.add(membro)
         db.session.flush()
 
@@ -228,7 +231,8 @@ def login():
         'permissions': permissions,
         'requer_troca_senha': user.requer_troca_senha
     }
-    print(f"DEBUG LOGIN - User: {user.username}, Nome: {user_data['nome']}")
+    print(f"DEBUG LOGIN - User: {user.username}, Role: {user_data['role']}, Nome: {user_data['nome']}")
+
     return jsonify({
         'access_token': access_token,
         'user': user_data
@@ -261,7 +265,8 @@ def me():
             'permissions': permissions,
             'requer_troca_senha': user.requer_troca_senha
         }
-        print(f"DEBUG ME - User: {user.username}, Nome: {user_data['nome']}")
+        print(f"DEBUG ME - User: {user.username}, Role: {user_data['role']}, Nome: {user_data['nome']}")
+
         return jsonify({
             'user': user_data
         })
