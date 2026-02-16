@@ -167,6 +167,7 @@ class Membro(db.Model):
             'lider_id': self.lider_id,
             'supervisor_id': self.supervisor_id,
             'pastor_id': self.pastor_id,
+            'pastor_nome': self.pastor_id_rel.nome if self.pastor_id_rel else None,
             'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
             'lider': {'id': self.lider.id, 'nome': self.lider.nome} if self.lider else None,
             'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome} if self.supervisor else None,
@@ -328,9 +329,7 @@ class Celula(db.Model):
             'supervisor_id': self.supervisor_id,
             'lider_id': self.lider_id,
             'vice_lider_id': self.vice_lider_id,
-            'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
-            'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome} if self.supervisor else None,
-            'lider': {'id': self.lider.id, 'nome': self.lider.nome} if self.lider else None,
+            'pastor_id': self.ide.pastor_id if self.ide else None,
             'dia_reuniao': self.dia_reuniao,
             'horario_reuniao': self.horario_reuniao,
             'logradouro': self.logradouro,
@@ -338,7 +337,6 @@ class Celula(db.Model):
             'complemento': self.complemento,
             'bairro': self.bairro,
             'cidade': self.cidade,
-            'estado': self.estado,
             'estado': self.estado,
             'cep': self.cep,
             'ativo': self.ativo,
@@ -361,7 +359,7 @@ class Nucleo(db.Model):
             'id': self.id,
             'nome': self.nome,
             'celula_id': self.celula_id,
-            'membros_nucleo': [m.to_dict() for m in self.membros_nucleo]
+            'membros': [m.to_dict() for m in self.membros_nucleo]
         }
 
 class MembroNucleo(db.Model):
