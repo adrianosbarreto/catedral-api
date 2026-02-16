@@ -89,16 +89,11 @@ class Ide(db.Model):
     __tablename__ = 'ides'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    pastor_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
-
-    pastor = db.relationship('Membro', foreign_keys=[pastor_id], backref='ides_lideradas')
 
     def to_dict(self):
         return {
             'id': self.id, 
-            'nome': self.nome,
-            'pastor_id': self.pastor_id,
-            'pastor': {'id': self.pastor.id, 'nome': self.pastor.nome} if self.pastor else None
+            'nome': self.nome
         }
 
 class Membro(db.Model):
@@ -279,12 +274,10 @@ class Celula(db.Model):
             'ide_id': self.ide_id,
             'supervisor_id': self.supervisor_id,
             'lider_id': self.lider_id,
-            'pastor_id': self.ide.pastor_id if self.ide else None,
             'vice_lider_id': self.vice_lider_id,
             'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
             'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome} if self.supervisor else None,
             'lider': {'id': self.lider.id, 'nome': self.lider.nome} if self.lider else None,
-            'pastor': {'id': self.ide.pastor.id, 'nome': self.ide.pastor.nome} if self.ide and self.ide.pastor else None,
             'dia_reuniao': self.dia_reuniao,
             'horario_reuniao': self.horario_reuniao,
             'logradouro': self.logradouro,

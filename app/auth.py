@@ -223,6 +223,8 @@ def login():
         'email': user.email,
         'role': user.role,
         'ide_id': user.membro.ide_id if user.membro else None,
+        'membro_id': user.membro.id if user.membro else None,
+        'supervisor_id': user.membro.supervisor_id if user.membro else None,
         'permissions': permissions,
         'requer_troca_senha': user.requer_troca_senha
     }
@@ -254,6 +256,8 @@ def me():
             'email': user.email,
             'role': user.role,
             'ide_id': user.membro.ide_id if user.membro else None,
+            'membro_id': user.membro.id if user.membro else None,
+            'supervisor_id': user.membro.supervisor_id if user.membro else None,
             'permissions': permissions,
             'requer_troca_senha': user.requer_troca_senha
         }

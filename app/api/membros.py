@@ -1,7 +1,7 @@
 from flask import jsonify, request
 from flask_jwt_extended import jwt_required
 from app.api import api
-from app.models import Membro, Endereco, PapelMembro, Ide
+from app.models import Membro, Endereco, PapelMembro, Ide, Role
 from app import db
 from datetime import datetime
 
@@ -24,6 +24,7 @@ def get_membros():
     cpf = request.args.get('cpf')
     estado_civil = request.args.get('estado_civil')
     lider_id = request.args.get('lider_id', type=int)
+    supervisor_id = request.args.get('supervisor_id', type=int)
     
     query = Membro.query.filter_by(ativo=True)
     
@@ -42,15 +43,31 @@ def get_membros():
             query = query.filter(Membro.cpf == cpf)
 
     if role:
-        # Check if the DB value contains the filter string (e.g. 'solteiro' in 'Solteiro(a)')
-        query = query.filter(Membro.estado_civil.ilike(f'%{estado_civil}%'))
+        # Handle comma-separated roles
+        roles_list = [r.strip() for r in role.split(',')]
+        from sqlalchemy import or_
+        from app.models import PapelMembro, Role
+        query = query.join(PapelMembro, Membro.id == PapelMembro.membro_id)\
+                     .outerjoin(Role, PapelMembro.role_id == Role.id)\
+                     .filter(
+            or_(
+                PapelMembro.papel.in_(roles_list),
+                Role.name.in_(roles_list)
+            )
+        )
+
+    if ide_id:
+        query = query.filter(Membro.ide_id == ide_id)
+
+    if supervisor_id:
+        from sqlalchemy import or_
+        query = query.filter(or_(Membro.supervisor_id == supervisor_id, Membro.lider_id == supervisor_id))
 
     if lider_id:
         query = query.filter(Membro.lider_id == lider_id)
 
-    # Use distinct to ensure no duplicate members due to joins
     query = query.distinct()
-
+    
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     membros = pagination.items
     
@@ -125,6 +142,30 @@ def create_membro():
 
     db.session.commit()
     return jsonify(membro.to_dict()), 201
+
+@api.route('/membros/me/hierarquia', methods=['GET'])
+@jwt_required()
+def get_my_hierarchy():
+    from flask_jwt_extended import get_jwt_identity
+    from app.models import User
+    
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    if not user or not user.membro:
+        return jsonify({'error': 'Membro não encontrado'}), 404
+
+    membro = user.membro
+    hierarchy = {
+        'lider': {'id': membro.lider.id, 'nome': membro.lider.nome} if membro.lider else None,
+        'supervisor': {'id': membro.supervisor.id, 'nome': membro.supervisor.nome} if membro.supervisor else None,
+        'pastor': {'id': membro.pastor_id_rel.id, 'nome': membro.pastor_id_rel.nome} if membro.pastor_id_rel else None,
+        'ide': {'id': membro.ide.id, 'nome': membro.ide.nome} if membro.ide else None
+    }
+    
+    if membro.ide and membro.ide.pastor:
+         hierarchy['pastor_ide'] = {'id': membro.ide.pastor.id, 'nome': membro.ide.pastor.nome}
+
+    return jsonify(hierarchy)
 
 @api.route('/membros/<int:id>', methods=['GET'])
 @jwt_required()
