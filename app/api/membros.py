@@ -259,24 +259,33 @@ def get_dashboard_stats():
     current_user_id = get_jwt_identity()
     user = db.session.get(User, current_user_id)
 
-    # Total members (filtered)
-    membro_query = Membro.query
+    # Total members (active and filtered)
+    membro_query = Membro.query.filter_by(ativo=True)
     if user:
         membro_query = MembroScope.apply(membro_query, user)
     total_membros = membro_query.count()
     
     # Role distribution (filtered)
+    # Using CASE to handle visitors and members without roles
+    # Consider both deprecated 'papel' column and new 'Role' relationship
+    from app.models import Role
     roles_dist = db.session.query(
-        PapelMembro.papel, 
-        func.count(PapelMembro.id)
-    ).join(Membro).filter(Membro.id.in_(membro_query.with_entities(Membro.id))).group_by(PapelMembro.papel).all()
-    
-    role_counts = {role: count for role, count in roles_dist}
+        db.case(
+            (Role.name != None, Role.name),
+            (PapelMembro.papel != None, PapelMembro.papel),
+            else_='membro_visitante'
+        ).label('categoria'), 
+        func.count(Membro.id)
+    ).select_from(Membro)\
+     .outerjoin(PapelMembro, Membro.id == PapelMembro.membro_id)\
+     .outerjoin(Role, PapelMembro.role_id == Role.id)\
+     .filter(Membro.id.in_(membro_query.with_entities(Membro.id)))\
+     .group_by(db.text('categoria')).all()
     
     return jsonify({
         'total_membros': total_membros,
         'roles_distribution': [
-            {'papel': role, 'quantidade': count} 
-            for role, count in roles_dist
+            {'papel': row[0], 'quantidade': row[1]} 
+            for row in roles_dist
         ]
     })

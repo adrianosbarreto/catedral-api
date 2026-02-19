@@ -187,7 +187,7 @@ class Ide(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     pastor_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
 
-    pastor = db.relationship('Membro', foreign_keys=[pastor_id])
+    pastor = db.relationship('Membro', foreign_keys=[pastor_id], backref=db.backref('ides_lideradas', lazy='dynamic'))
 
     def to_dict(self):
         try:

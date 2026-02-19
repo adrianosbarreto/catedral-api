@@ -20,20 +20,10 @@ class CellScope:
 
         # 2. Pastor de Rede: View cells in their IDEs (Network)
         if role_name == 'pastor_de_rede':
-            # Assuming Pastor de Rede leads an IDE
-            # Filter cells where cell.ide_id IN (ides where pastor_id == membro_id)
-            # Or simplified: linked via proper relationship
-            # Let's assume user.membro.ides_lideradas gives the IDEs
-            
-            # If `ides_lideradas` is a relationship on Membro model (we need to check models.py)
-            # Yes: pastor = db.relationship('Membro', foreign_keys=[pastor_id], backref='ides_lideradas')
-            
-            # So we get IDs of IDEs led by this pastor
-            my_ide_ids = [ide.id for ide in user.membro.ides_lideradas]
+            # Get IDs of IDEs led by this pastor
+            my_ide_ids = [ide.id for ide in user.membro.ides_lideradas.all()]
             if not my_ide_ids:
-                 # Ensure they see NOTHING if they lead no IDE
-                 # Or maybe they are just associated with an IDE?
-                 # Fallback to own IDE?
+                 # Fallback to own IDE if they lead no IDE
                  if user.membro.ide_id:
                      return query.filter_by(ide_id=user.membro.ide_id)
                  return query.filter_by(id=-1)
@@ -77,17 +67,25 @@ class MembroScope:
 
         # 2. Pastor de Rede: View members in their IDEs (Network)
         if role_name == 'pastor_de_rede':
-            my_ide_ids = [ide.id for ide in user.membro.ides_lideradas]
+            my_ide_ids = [ide.id for ide in user.membro.ides_lideradas.all()]
             if not my_ide_ids:
                  if user.membro.ide_id:
-                     return query.filter_by(ide_id=user.membro.ide_id)
-                 return query.filter_by(id=-1)
+                     return query.filter((Membro.ide_id == user.membro.ide_id) | (Membro.pastor_id == membro_id))
+                 return query.filter(Membro.pastor_id == membro_id)
             
-            return query.filter(Membro.ide_id.in_(my_ide_ids))
+            # Include members linked to cells in the network
+            from app.models import MembroNucleo, Nucleo, Celula
+            celula_subquery = db.session.query(MembroNucleo.membro_id).join(Nucleo).join(Celula).filter(Celula.ide_id.in_(my_ide_ids))
+            
+            return query.filter((Membro.ide_id.in_(my_ide_ids)) | (Membro.pastor_id == membro_id) | (Membro.id.in_(celula_subquery)))
 
         # 3. Supervisor: View members directly under their supervision + themselves
         if role_name == 'supervisor':
-            return query.filter((Membro.supervisor_id == membro_id) | (Membro.id == membro_id))
+            # Include members directly supervised or linked to supervised cells
+            from app.models import MembroNucleo, Nucleo, Celula
+            celula_subquery = db.session.query(MembroNucleo.membro_id).join(Nucleo).join(Celula).filter(Celula.supervisor_id == membro_id)
+            
+            return query.filter((Membro.supervisor_id == membro_id) | (Membro.id == membro_id) | (Membro.id.in_(celula_subquery)))
 
             
         # 4. Lider: View own cell members (those who report to them)

@@ -231,7 +231,7 @@ def login():
         'permissions': permissions,
         'requer_troca_senha': user.requer_troca_senha
     }
-    print(f"DEBUG LOGIN - User: {user.username}, Role: {user_data['role']}, Nome: {user_data['nome']}")
+
 
     return jsonify({
         'access_token': access_token,
@@ -265,7 +265,7 @@ def me():
             'permissions': permissions,
             'requer_troca_senha': user.requer_troca_senha
         }
-        print(f"DEBUG ME - User: {user.username}, Role: {user_data['role']}, Nome: {user_data['nome']}")
+
 
         return jsonify({
             'user': user_data
