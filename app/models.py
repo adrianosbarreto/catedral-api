@@ -438,3 +438,37 @@ class SolicitacaoTransferencia(db.Model):
             'data_solicitacao': self.data_solicitacao.isoformat(),
             'data_resposta': self.data_resposta.isoformat() if self.data_resposta else None
         }
+
+# Relationship associations
+noticia_ides = db.Table('noticia_ides',
+    db.Column('noticia_id', db.Integer, db.ForeignKey('noticias.id'), primary_key=True),
+    db.Column('ide_id', db.Integer, db.ForeignKey('ides.id'), primary_key=True)
+)
+
+class Noticia(db.Model):
+    __tablename__ = 'noticias'
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(200), nullable=False)
+    foto_url = db.Column(db.String(500), nullable=True)
+    data_inicio = db.Column(db.DateTime, nullable=False)
+    data_fim = db.Column(db.DateTime, nullable=False)
+    mostrar_ao_iniciar = db.Column(db.Boolean, default=True)
+    todas_ides = db.Column(db.Boolean, default=True)
+    ativo = db.Column(db.Boolean, default=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    ides = db.relationship('Ide', secondary=noticia_ides, backref=db.backref('noticias', lazy='dynamic'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'titulo': self.titulo,
+            'foto_url': self.foto_url,
+            'data_inicio': self.data_inicio.isoformat() if self.data_inicio else None,
+            'data_fim': self.data_fim.isoformat() if self.data_fim else None,
+            'mostrar_ao_iniciar': self.mostrar_ao_iniciar,
+            'todas_ides': self.todas_ides,
+            'ides': [ide.id for ide in self.ides],
+            'ativo': self.ativo,
+            'criado_em': self.criado_em.isoformat() if self.criado_em else None
+        }
