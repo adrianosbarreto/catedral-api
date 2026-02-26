@@ -10,3 +10,4 @@ pytest-flask
 flask-login
 flask-jwt-extended
 Flask-APScheduler
+pywebpush
