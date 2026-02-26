@@ -472,3 +472,60 @@ class Noticia(db.Model):
             'ativo': self.ativo,
             'criado_em': self.criado_em.isoformat() if self.criado_em else None
         }
+
+class NotificationSubscription(db.Model):
+    __tablename__ = 'notification_subscriptions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # allow anonymous? standard is to tie to user
+    endpoint = db.Column(db.String(500), nullable=False, unique=True)
+    p256dh = db.Column(db.String(255), nullable=False)
+    auth = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user_rel = db.relationship('User', backref=db.backref('push_subscriptions', lazy='dynamic'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'endpoint': self.endpoint,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class PushMessage(db.Model):
+    __tablename__ = 'push_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    url = db.Column(db.String(500), nullable=True)
+    sent_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(50), default='sent') # 'sent', 'scheduled', 'failed'
+    success_count = db.Column(db.Integer, default=0)
+    failed_count = db.Column(db.Integer, default=0)
+    scheduled_for = db.Column(db.DateTime, nullable=True) # If set and in future, it's scheduled
+    target_ide_id = db.Column(db.Integer, db.ForeignKey('ides.id'), nullable=True)
+    target_supervisor_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sent_by = db.relationship('User', foreign_keys=[sent_by_id])
+    target_ide = db.relationship('Ide', foreign_keys=[target_ide_id])
+    target_supervisor = db.relationship('Membro', foreign_keys=[target_supervisor_id])
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'body': self.body,
+            'url': self.url,
+            'sent_by_id': self.sent_by_id,
+            'sent_by_username': self.sent_by.username if self.sent_by else None,
+            'status': self.status,
+            'success_count': self.success_count,
+            'failed_count': self.failed_count,
+            'scheduled_for': self.scheduled_for.isoformat() + 'Z' if self.scheduled_for else None,
+            'target_ide_id': self.target_ide_id,
+            'target_ide_nome': self.target_ide.nome if self.target_ide else None,
+            'target_supervisor_id': self.target_supervisor_id,
+            'target_supervisor_nome': self.target_supervisor.nome if self.target_supervisor else None,
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
+        }

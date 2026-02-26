@@ -9,6 +9,9 @@ db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
 
+from flask_apscheduler import APScheduler
+scheduler = APScheduler()
+
 def create_app(config_name='default'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
@@ -60,6 +63,10 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db, render_as_batch=True)
     oauth.init_app(app)
+
+    # Initialize APScheduler
+    scheduler.init_app(app)
+    scheduler.start()
 
     from app import models
     

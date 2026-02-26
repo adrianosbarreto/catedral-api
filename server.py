@@ -6,6 +6,11 @@ import os
 from waitress import serve
 from app import create_app
 
+import logging
+
+# Configurar logs do waitress para suprimir avisos de fila
+logging.getLogger('waitress.queue').setLevel(logging.ERROR)
+
 # Criar aplicação com configuração de produção
 app = create_app('production')
 
