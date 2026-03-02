@@ -30,7 +30,7 @@ def setup_ssh_tunnel(app):
         remote_db_host = os.environ.get('DB_REMOTE_HOST', '127.0.0.1')
         remote_db_port = int(os.environ.get('DB_REMOTE_PORT', 5432))
 
-        print(f"🔗 [SSH] Iniciando túnel para {ssh_host}:{ssh_port}...")
+        print(f"[SSH] Iniciando tunel para {ssh_host}:{ssh_port}...")
         
         tunnel_kwargs = {
             'ssh_address_or_host': (ssh_host, ssh_port),
@@ -55,11 +55,11 @@ def setup_ssh_tunnel(app):
         new_db_url = re.sub(r'@[\w\.-]+(:\d+)?/', f'@127.0.0.1:{local_port}/', db_url)
         app.config['SQLALCHEMY_DATABASE_URI'] = new_db_url
         
-        print(f"✅ [SSH] Túnel estabelecido na porta local {local_port}")
+        print(f"[SSH] Tunel estabelecido na porta local {local_port}")
         
         return tunnel
     except Exception as e:
-        print(f"❌ [SSH] Erro ao criar túnel: {e}")
+        print(f"[SSH] Erro ao criar tunel: {e}")
         return None
 
 def create_app(config_name='default'):
@@ -69,41 +69,24 @@ def create_app(config_name='default'):
     # Configurar subpath usando DispatcherMiddleware se definido no ambiente
     subpath = os.environ.get('APPLICATION_SUBPATH', '').rstrip('/')
     if subpath:
-        print(f"🔧 [DEBUG] Ativando subpath: {subpath}")
+        print(f"[DEBUG] Ativando subpath: {subpath}")
         from werkzeug.middleware.dispatcher import DispatcherMiddleware
         from werkzeug.wrappers import Response
         
-        # Aplicação dummy para a raiz (retorna 404)
+        # Aplicação dummy para a raiz (retorna 404 mas com CORS planejado via wrapper no final)
         def simple_app(environ, start_response):
-            print(f"🔧 [DEBUG] Request na raiz (fora do subpath): {environ.get('PATH_INFO')}")
-            response = Response('Not Found', status=404)
+            print(f"[DEBUG] Request na raiz (fora do subpath): {environ.get('PATH_INFO')}")
+            response = Response('Not Found', status=404, content_type='text/plain')
             return response(environ, start_response)
         
         # Montar a aplicação Flask no subpath
         app.wsgi_app = DispatcherMiddleware(simple_app, {
             subpath: app.wsgi_app
         })
-        print(f"🔧 [DEBUG] DispatcherMiddleware configurado em {subpath}")
     else:
-        print("🔧 [DEBUG] Subpath não definido, servindo na raiz (/)")
+        print("[DEBUG] Subpath não definido, servindo na raiz (/)")
 
-    from flask_cors import CORS
-    # Permitir origens específicas ou todas (mais seguro para produção com subdomains variados)
-    # Adicionado suporte para acesso via IP local para testes em dispositivos móveis
-    CORS(app, resources={r"/*": {
-        "origins": [
-            "https://www.liderfoursquare.com.br", 
-            "https://liderfoursquare.com.br",
-            "http://www.liderfoursquare.com.br",
-            "http://liderfoursquare.com.br",
-            "http://localhost:5173", 
-            "http://localhost:8080",
-            "*" # Allow all for local testing convenience
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"]
-    }})
-
+    # Configurar JWT
     from datetime import timedelta
     from flask_jwt_extended import JWTManager
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-key')
@@ -139,5 +122,13 @@ def create_app(config_name='default'):
 
     from app.routes import main as main_blueprint
     app.register_blueprint(main_blueprint)
+
+    # CORS configuration - At the very end to wrap DispatcherMiddleware if present
+    from flask_cors import CORS
+    CORS(app, resources={r"/*": {
+        "origins": ["*"], 
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers"]
+    }})
 
     return app

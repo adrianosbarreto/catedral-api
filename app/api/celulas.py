@@ -36,6 +36,52 @@ def get_celulas():
     celulas_list = query.all()
     return jsonify([c.to_dict() for c in celulas_list])
 
+@api.route('/hello-test')
+def hello_test():
+    return jsonify({"message": "hello"})
+
+@api.route('/celulas/nearby', methods=['GET'])
+@jwt_required()
+def get_nearby_cells():
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized. Admin only.'}), 403
+
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    radius = request.args.get('radius', 10.0, type=float) # Default 10km
+
+    if lat is None or lng is None:
+        return jsonify({'error': 'Latitude and Longitude are required'}), 400
+
+    from sqlalchemy import func
+    
+    # Haversine formula to calculate distance in KM
+    # distance = 6371 * acos(cos(lat1) * cos(lat2) * cos(lng2 - lng1) + sin(lat1) * sin(lat2))
+    distance_expr = func.acos(
+        func.cos(func.radians(lat)) * func.cos(func.radians(Celula.latitude)) * 
+        func.cos(func.radians(Celula.longitude) - func.radians(lng)) + 
+        func.sin(func.radians(lat)) * func.sin(func.radians(Celula.latitude))
+    ) * 6371
+
+    nearby_cells_query = db.session.query(Celula, distance_expr.label('distance')).filter(
+        Celula.ativo == True,
+        Celula.latitude.isnot(None),
+        Celula.longitude.isnot(None)
+    ).filter(distance_expr <= radius).order_by('distance').limit(50)
+
+    results_raw = nearby_cells_query.all()
+
+    results = []
+    for cell, distance in results_raw:
+        d = cell.to_dict()
+        d['distance'] = round(float(distance), 2)
+        results.append(d)
+
+    return jsonify(results)
+
 @api.route('/celulas/<int:id>', methods=['GET'])
 @jwt_required()
 def get_celula(id):
@@ -154,3 +200,9 @@ def update_celula_data(celula, data):
     if 'cidade' in data: celula.cidade = data['cidade']
     if 'estado' in data: celula.estado = data['estado']
     if 'cep' in data: celula.cep = data['cep']
+    if 'latitude' in data: 
+        try: celula.latitude = float(data['latitude'])
+        except: pass
+    if 'longitude' in data: 
+        try: celula.longitude = float(data['longitude'])
+        except: pass

@@ -1,0 +1,1130 @@
+[
+    {
+        "id": 30,
+        "nome": "Shalom ",
+        "ide_id": 20,
+        "supervisor_id": 79,
+        "lider_id": 113,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Rua 3 de outubro ",
+        "numero": "468 ",
+        "complemento": "Algusto Corrêa e 25 de junho",
+        "bairro": "Guamá ",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66063230",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 79,
+            "nome": "Daniel Cereja Pereira ",
+            "telefone": "(91) 98869-4456"
+        },
+        "lider": {
+            "id": 113,
+            "nome": "Max Emiliano da Conceição Chaves",
+            "telefone": "(91) 98109-7321"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 34,
+        "nome": "Tribo de Dã",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 158,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Passagem São Cristóvão",
+        "numero": "1035",
+        "complemento": "Entre mucajas e maria gorete",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66065-670",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 158,
+            "nome": "Alessandro Morais Nonato ",
+            "telefone": "(91) 99614-1961"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 29,
+        "nome": "Tribo de Levi ",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 139,
+        "vice_lider_id": 64,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "20:00",
+        "logradouro": "Passagem joana darc entre união e boa vontade",
+        "numero": "94",
+        "complemento": "(Da Tv Segunda de Queluz)",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66077061",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 139,
+            "nome": "Emanuelle Soares de lima",
+            "telefone": "(91) 98086-4994"
+        },
+        "vice_lider": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        }
+    },
+    {
+        "id": 35,
+        "nome": "Tribo de Simeão ",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 157,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Rua Nova Segunda",
+        "numero": "52",
+        "complemento": "Entre Roberto camelier e Honório ",
+        "bairro": "Condor",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66033573",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 157,
+            "nome": "Edicléa Lopes Rezende Oliveira ",
+            "telefone": "(91) 98068-8867"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 36,
+        "nome": "Tribo de Judá",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 160,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Passagem Joana D'arc",
+        "numero": "15",
+        "complemento": "(Da Tv Segunda de Queluz)",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66077061",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 160,
+            "nome": "Evelyn dos Santos Munhoes",
+            "telefone": "(91) 98616-4723"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 38,
+        "nome": "Tribo de Naftali",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 156,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "19:30",
+        "logradouro": "Ilha do combú ",
+        "numero": null,
+        "complemento": "Casa do Eloi",
+        "bairro": "Área Rural/ Rio são Benedito ",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66999899",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 156,
+            "nome": "Aldair de Sousa Baldez ",
+            "telefone": "(91) 99198-3485"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 12,
+        "nome": "REINO JURUNAS 5",
+        "ide_id": 14,
+        "supervisor_id": 17,
+        "lider_id": 24,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Vila Martins",
+        "numero": "1 B",
+        "complemento": "Passagem Leao",
+        "bairro": "Cidade Velha",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66023300",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 17,
+            "nome": "Rafael Maciel de Brito ",
+            "telefone": "(91) 98267-9707"
+        },
+        "lider": {
+            "id": 24,
+            "nome": "Jéssica Assunção ",
+            "telefone": "(91) 98044-8136"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 10,
+        "nome": "NOVA ALIANÇA 6",
+        "ide_id": 15,
+        "supervisor_id": 15,
+        "lider_id": 18,
+        "vice_lider_id": 18,
+        "pastor_id": 13,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "20:00",
+        "logradouro": "Rua dos Tamoios",
+        "numero": "439",
+        "complemento": "Vila São José 6",
+        "bairro": "Jurunas",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66025-125 ",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 15,
+            "nome": "IDE 4 - Pr. Waltercley Melo"
+        },
+        "supervisor": {
+            "id": 15,
+            "nome": "Adriana Miranda ",
+            "telefone": ""
+        },
+        "lider": {
+            "id": 18,
+            "nome": "Jhonatan Ferreira ",
+            "telefone": "(91) 98566-5728"
+        },
+        "vice_lider": {
+            "id": 18,
+            "nome": "Jhonatan Ferreira ",
+            "telefone": "(91) 98566-5728"
+        }
+    },
+    {
+        "id": 39,
+        "nome": "Seguidores de cristo",
+        "ide_id": 19,
+        "supervisor_id": 188,
+        "lider_id": 189,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Rua Augusto Corrêa",
+        "numero": "1209 vila do amor",
+        "complemento": "Casa 07 fundos ",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66073040",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 188,
+            "nome": "Mauro Fernando",
+            "telefone": "(91) 98749-0720"
+        },
+        "lider": {
+            "id": 189,
+            "nome": "Josue matias berina Oliveira ",
+            "telefone": "(91) 98404-6032"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 14,
+        "nome": "Oásis 4 ",
+        "ide_id": 14,
+        "supervisor_id": 55,
+        "lider_id": 56,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Travessa Humaitá",
+        "numero": "1130",
+        "complemento": "Ed Krimet- Área da Churrasqueira ",
+        "bairro": "Pedreira ",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66085-148",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 55,
+            "nome": "Mauricio Brasil",
+            "telefone": "(91) 98404-6308"
+        },
+        "lider": {
+            "id": 56,
+            "nome": "PATRICIA SOUZA FARIAS",
+            "telefone": "(91) 98193-1246"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 15,
+        "nome": "Oásis 1",
+        "ide_id": 14,
+        "supervisor_id": 55,
+        "lider_id": 58,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "sexta",
+        "horario_reuniao": "19:50",
+        "logradouro": "Avenida Pedro Miranda",
+        "numero": "2050",
+        "complemento": "Ed Danubio azul ",
+        "bairro": "Pedreira",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66085024",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 55,
+            "nome": "Mauricio Brasil",
+            "telefone": "(91) 98404-6308"
+        },
+        "lider": {
+            "id": 58,
+            "nome": "Gabriela Samara Lobo da Silva Barreto ",
+            "telefone": "(91) 98841-8739"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 16,
+        "nome": "Reino jurunas 3 ",
+        "ide_id": 14,
+        "supervisor_id": 17,
+        "lider_id": 57,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Rua dos Mundurucus",
+        "numero": "07",
+        "complemento": "até 759/760",
+        "bairro": "Jurunas",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66025660",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 17,
+            "nome": "Rafael Maciel de Brito ",
+            "telefone": "(91) 98267-9707"
+        },
+        "lider": {
+            "id": 57,
+            "nome": "Samilly Gonçalves Melo de Brito ",
+            "telefone": "(91) 98252-3760"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 17,
+        "nome": "Sou de Jesus 2",
+        "ide_id": 18,
+        "supervisor_id": 60,
+        "lider_id": 62,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "20:00",
+        "logradouro": "Passagem Antônio Monteiro",
+        "numero": "01 A",
+        "complemento": "Atrás do antigo Bolero",
+        "bairro": "Condor",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66065090",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 18,
+            "nome": "IDE 3 - Pr. Gerson Albuquerque"
+        },
+        "supervisor": {
+            "id": 60,
+            "nome": "Susielem Costa Pinheiro",
+            "telefone": "(91) 98921-7931"
+        },
+        "lider": {
+            "id": 62,
+            "nome": "Nayane Wanessa Portugal Lobato ",
+            "telefone": "(91) 98971-3847"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 18,
+        "nome": "Oásis 2",
+        "ide_id": 14,
+        "supervisor_id": 55,
+        "lider_id": 55,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "20:00",
+        "logradouro": "Alameda das Acácias",
+        "numero": "6",
+        "complemento": "Residencial Parklandia ",
+        "bairro": "Parque Verde",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66633150",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 55,
+            "nome": "Mauricio Brasil",
+            "telefone": "(91) 98404-6308"
+        },
+        "lider": {
+            "id": 55,
+            "nome": "Mauricio Brasil",
+            "telefone": "(91) 98404-6308"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 19,
+        "nome": "Célula IDE ",
+        "ide_id": 14,
+        "supervisor_id": 84,
+        "lider_id": 89,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Rua Barão de Igarapé Miri",
+        "numero": "1372",
+        "complemento": "de 1/2 ao fim",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66075-048",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 84,
+            "nome": "Rone Gomes Teixeira ",
+            "telefone": "(91) 98174-6311"
+        },
+        "lider": {
+            "id": 89,
+            "nome": "Elaine Branches de Jesus ",
+            "telefone": "(91) 99386-6393"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 13,
+        "nome": "REINO JURUNAS 4",
+        "ide_id": 14,
+        "supervisor_id": 17,
+        "lider_id": 34,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:00",
+        "logradouro": "Rua dos Pariquis",
+        "numero": "748",
+        "complemento": "de 640/641 a 952/953",
+        "bairro": "Jurunas",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66033590",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 17,
+            "nome": "Rafael Maciel de Brito ",
+            "telefone": "(91) 98267-9707"
+        },
+        "lider": {
+            "id": 34,
+            "nome": "Lucas Cardoso Pacheco ",
+            "telefone": "(91) 99348-1683"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 20,
+        "nome": "Conectados com Cristo 10",
+        "ide_id": 19,
+        "supervisor_id": 97,
+        "lider_id": 98,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "20:00",
+        "logradouro": "Travessa Timbó",
+        "numero": "750",
+        "complemento": "Entre Pedro Miranda e Antônio Everdosa ",
+        "bairro": "Pedreira",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66083-048 ",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 97,
+            "nome": "VANESSA CALDAS MENDES",
+            "telefone": "(91) 98107-6727"
+        },
+        "lider": {
+            "id": 98,
+            "nome": "Joseane Cristina Lobo de Araújo Carréra",
+            "telefone": "(91) 98301-5532"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 21,
+        "nome": "Conectados 4",
+        "ide_id": 19,
+        "supervisor_id": 97,
+        "lider_id": 100,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "20:00",
+        "logradouro": "Passagem Helena ",
+        "numero": "45",
+        "complemento": null,
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": null,
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 97,
+            "nome": "VANESSA CALDAS MENDES",
+            "telefone": "(91) 98107-6727"
+        },
+        "lider": {
+            "id": 100,
+            "nome": "PATRICIA DE SOUZA BAIA ARAUJO",
+            "telefone": "(91) 98037-1557"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 22,
+        "nome": "Tribo de Judá",
+        "ide_id": 14,
+        "supervisor_id": 92,
+        "lider_id": 105,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "19:30",
+        "logradouro": "",
+        "numero": "110",
+        "complemento": "Entre Passagem Joana D'Arc e Passagem Popular",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66075220",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 92,
+            "nome": "Israel Matheus Correa de Souza",
+            "telefone": "(91) 99923-0169"
+        },
+        "lider": {
+            "id": 105,
+            "nome": "Ronaldo Lima de Souza",
+            "telefone": "(91) 98182-1391"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 23,
+        "nome": "Conectados com Cristo 3",
+        "ide_id": 19,
+        "supervisor_id": 97,
+        "lider_id": 101,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "19:30",
+        "logradouro": "Passagem Santa Helena",
+        "numero": "55A",
+        "complemento": "José Bonifácio e Barão de igarape Miri",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66065330",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 97,
+            "nome": "VANESSA CALDAS MENDES",
+            "telefone": "(91) 98107-6727"
+        },
+        "lider": {
+            "id": 101,
+            "nome": "Michela Ferreira Borges ",
+            "telefone": "(91) 98286-2264"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 25,
+        "nome": "Moriá Azul",
+        "ide_id": 20,
+        "supervisor_id": 79,
+        "lider_id": 126,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:00",
+        "logradouro": "Travessa Teófilo Conduru",
+        "numero": "884",
+        "complemento": "Casa",
+        "bairro": "Canudos",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66070-530",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 79,
+            "nome": "Daniel Cereja Pereira ",
+            "telefone": "(91) 98869-4456"
+        },
+        "lider": {
+            "id": 126,
+            "nome": "Paulo Gabriel Pereira Brasil",
+            "telefone": "(91) 98077-7229"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 26,
+        "nome": "Célula Ágape 10",
+        "ide_id": 14,
+        "supervisor_id": 82,
+        "lider_id": 128,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Travessa Nove de Janeiro",
+        "numero": "2383",
+        "complemento": "de 1882/1883 a 2568/2569",
+        "bairro": "São Brás",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66060-585",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 82,
+            "nome": "Elizabete Cardoso Costa",
+            "telefone": "(91) 98233-1415"
+        },
+        "lider": {
+            "id": 128,
+            "nome": "Maico Torres",
+            "telefone": "(91) 98034-4242"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 27,
+        "nome": "Célula Ágape 11",
+        "ide_id": 14,
+        "supervisor_id": 82,
+        "lider_id": 114,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "terca",
+        "horario_reuniao": "20:00",
+        "logradouro": "Rua Yamada",
+        "numero": "E-06",
+        "complemento": "Condomínio Jardim Espanha",
+        "bairro": "Parque Verde",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66635-557",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 82,
+            "nome": "Elizabete Cardoso Costa",
+            "telefone": "(91) 98233-1415"
+        },
+        "lider": {
+            "id": 114,
+            "nome": "MEDIÃ OLIVEIRA FONSECA",
+            "telefone": "(91) 98333-8078"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 28,
+        "nome": "Célula Ebenézer ",
+        "ide_id": 14,
+        "supervisor_id": 92,
+        "lider_id": 134,
+        "vice_lider_id": null,
+        "pastor_id": 5,
+        "dia_reuniao": "segunda",
+        "horario_reuniao": "19:30",
+        "logradouro": "Rua Timbiras",
+        "numero": "150",
+        "complemento": "até 514/515",
+        "bairro": "Jurunas",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66030610",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 14,
+            "nome": "IDE 5 - Pr. Diego Salgado"
+        },
+        "supervisor": {
+            "id": 92,
+            "nome": "Israel Matheus Correa de Souza",
+            "telefone": "(91) 99923-0169"
+        },
+        "lider": {
+            "id": 134,
+            "nome": "Fábio Viana do Amaral ",
+            "telefone": "(91) 98296-1175"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 31,
+        "nome": "Tribo de Issacar",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 142,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Passagem José de Alencar",
+        "numero": "553",
+        "complemento": null,
+        "bairro": "Marambaia",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66620620",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 142,
+            "nome": "Victor Manoel Ramos Cavalcante ",
+            "telefone": "(91) 98711-2031"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 32,
+        "nome": "Sal e Luz ",
+        "ide_id": 20,
+        "supervisor_id": 79,
+        "lider_id": 140,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "20:00",
+        "logradouro": "Passagem Monte Sinai",
+        "numero": "30",
+        "complemento": null,
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66073-410",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 79,
+            "nome": "Daniel Cereja Pereira ",
+            "telefone": "(91) 98869-4456"
+        },
+        "lider": {
+            "id": 140,
+            "nome": "Diogo da Silva Venâncio ",
+            "telefone": "(91) 98308-1198"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 33,
+        "nome": "Bunker",
+        "ide_id": 20,
+        "supervisor_id": 79,
+        "lider_id": 147,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "quinta",
+        "horario_reuniao": "08:00",
+        "logradouro": "Rua Lírio do Vale ",
+        "numero": "545",
+        "complemento": null,
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66079130",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 79,
+            "nome": "Daniel Cereja Pereira ",
+            "telefone": "(91) 98869-4456"
+        },
+        "lider": {
+            "id": 147,
+            "nome": "Odilene Silva ",
+            "telefone": "(98) 98100-8899"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 37,
+        "nome": "Tribo de benjamim ",
+        "ide_id": 19,
+        "supervisor_id": 64,
+        "lider_id": 159,
+        "vice_lider_id": 175,
+        "pastor_id": null,
+        "dia_reuniao": "sexta",
+        "horario_reuniao": "19:30",
+        "logradouro": "Passagem Santa Rosa",
+        "numero": "42",
+        "complemento": "Entre popular e Santa Fé",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66075530",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 19,
+            "nome": "IDE 6 - Pr. Max Santto"
+        },
+        "supervisor": {
+            "id": 64,
+            "nome": "JOSE DIEGO DA CONCEICAO SILVA",
+            "telefone": "(91) 98932-8940"
+        },
+        "lider": {
+            "id": 159,
+            "nome": "Mauro Vitor da Silva corre",
+            "telefone": "(91) 99225-0368"
+        },
+        "vice_lider": {
+            "id": 175,
+            "nome": "Joline dos Santos ",
+            "telefone": "91985137231"
+        }
+    },
+    {
+        "id": 40,
+        "nome": "Seguidores de Cristo",
+        "ide_id": 20,
+        "supervisor_id": 116,
+        "lider_id": 197,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "19:00",
+        "logradouro": "Passagem Vinte de Julho",
+        "numero": "116A",
+        "complemento": "Entre Jiparana e Tucunduba 2",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66073610",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 116,
+            "nome": "Jorge T. Mescouto Santiago ",
+            "telefone": "(91) 98221-2509"
+        },
+        "lider": {
+            "id": 197,
+            "nome": "José Carlos Júnior Silva da Silva ",
+            "telefone": "(94) 98806-8492"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 41,
+        "nome": "Trindade VII ",
+        "ide_id": 20,
+        "supervisor_id": 195,
+        "lider_id": 200,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "20:00",
+        "logradouro": "Casa",
+        "numero": "260",
+        "complemento": "Ao lado do mercadinho do sivirino",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66075-580",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 195,
+            "nome": "Luana Santos",
+            "telefone": "(55) 91983-0829"
+        },
+        "lider": {
+            "id": 200,
+            "nome": "Jonathan Barros Borges ",
+            "telefone": "(91) 98458-0080"
+        },
+        "vice_lider": null
+    },
+    {
+        "id": 42,
+        "nome": "Trindade IV👑",
+        "ide_id": 20,
+        "supervisor_id": 195,
+        "lider_id": 199,
+        "vice_lider_id": null,
+        "pastor_id": null,
+        "dia_reuniao": "sabado",
+        "horario_reuniao": "20:00",
+        "logradouro": "Passagem Lauro Pessoa",
+        "numero": "44",
+        "complemento": "Fundos",
+        "bairro": "Guamá",
+        "cidade": "Belém",
+        "estado": "PA",
+        "cep": "66073340",
+        "latitude": null,
+        "longitude": null,
+        "ativo": true,
+        "ide": {
+            "id": 20,
+            "nome": "IDE Jovem - Pra. Maximira"
+        },
+        "supervisor": {
+            "id": 195,
+            "nome": "Luana Santos",
+            "telefone": "(55) 91983-0829"
+        },
+        "lider": {
+            "id": 199,
+            "nome": "Luan Corrêa dos Santos",
+            "telefone": "(91) 98286-6954"
+        },
+        "vice_lider": null
+    }
+]

@@ -313,6 +313,8 @@ class Celula(db.Model):
     cidade = db.Column(db.String(50), nullable=True)
     estado = db.Column(db.String(2), nullable=True)
     cep = db.Column(db.String(10), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     ativo = db.Column(db.Boolean, default=True)
     
     # Relationships
@@ -339,6 +341,8 @@ class Celula(db.Model):
             'cidade': self.cidade,
             'estado': self.estado,
             'cep': self.cep,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
             'ativo': self.ativo,
             'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
             'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome, 'telefone': self.supervisor.telefone} if self.supervisor else None,

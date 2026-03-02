@@ -282,10 +282,18 @@ def get_dashboard_stats():
      .filter(Membro.id.in_(membro_query.with_entities(Membro.id)))\
      .group_by(db.text('categoria')).all()
     
+    # Celulas para o mapa
+    from app.models import Celula
+    celula_query = Celula.query.filter_by(ativo=True)
+    if user:
+        celula_query = CellScope.apply(celula_query, user)
+    celulas_data = [c.to_dict() for c in celula_query.all()]
+    
     return jsonify({
         'total_membros': total_membros,
         'roles_distribution': [
             {'papel': row[0], 'quantidade': row[1]} 
             for row in roles_dist
-        ]
+        ],
+        'celulas': celulas_data
     })
