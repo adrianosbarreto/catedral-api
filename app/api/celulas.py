@@ -13,10 +13,25 @@ def get_celulas():
     if not user:
         return jsonify({'error': 'User not found'}), 404
 
+    # Filtros
+    nome = request.args.get('nome')
+    ide_id = request.args.get('ide_id', type=int)
+    lider_id = request.args.get('lider_id', type=int)
+    supervisor_id = request.args.get('supervisor_id', type=int)
+
     from app.scopes import CellScope
     
     query = Celula.query.filter_by(ativo=True)
     query = CellScope.apply(query, user)
+
+    if nome:
+        query = query.filter(Celula.nome.ilike(f'%{nome}%'))
+    if ide_id:
+        query = query.filter(Celula.ide_id == ide_id)
+    if lider_id:
+        query = query.filter(Celula.lider_id == lider_id)
+    if supervisor_id:
+        query = query.filter(Celula.supervisor_id == supervisor_id)
     
     celulas_list = query.all()
     return jsonify([c.to_dict() for c in celulas_list])

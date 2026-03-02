@@ -19,4 +19,6 @@ dependencies = [
     "faker>=35.2.2",
     "Flask-APScheduler>=1.13.1",
     "pywebpush>=1.14.0",
+    "sshtunnel>=0.4.0",
+    "paramiko<3.0.0",
 ]
