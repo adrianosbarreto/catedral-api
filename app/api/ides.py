@@ -28,6 +28,8 @@ def create_ide():
 
     ide = Ide()
     ide.nome = data['nome']
+    if 'cor' in data:
+        ide.cor = data['cor']
     if 'pastor_id' in data:
         ide.pastor_id = data['pastor_id']
     
@@ -49,6 +51,7 @@ def update_ide(id):
     data = request.get_json() or {}
     
     if 'nome' in data: ide.nome = data['nome']
+    if 'cor' in data: ide.cor = data['cor']
     if 'pastor_id' in data: ide.pastor_id = data['pastor_id']
     
     try:

@@ -206,6 +206,7 @@ class Ide(db.Model):
     __tablename__ = 'ides'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
+    cor = db.Column(db.String(20), nullable=True, default='#3b82f6')
     pastor_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
 
     pastor = db.relationship('Membro', foreign_keys=[pastor_id], backref=db.backref('ides_lideradas', lazy='dynamic'))
@@ -215,13 +216,15 @@ class Ide(db.Model):
             return {
                 'id': self.id, 
                 'nome': self.nome,
+                'cor': self.cor or '#3b82f6',
                 'pastor_id': getattr(self, 'pastor_id', None),
                 'pastor_nome': getattr(self.pastor, 'nome', None) if getattr(self, 'pastor', None) else None
             }
         except Exception:
             return {
                 'id': self.id,
-                'nome': self.nome
+                'nome': self.nome,
+                'cor': self.cor or '#3b82f6'
             }
 
 

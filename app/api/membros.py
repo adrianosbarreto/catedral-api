@@ -254,7 +254,8 @@ def get_dashboard_stats():
     from flask_jwt_extended import get_jwt_identity
     from app.models import User
     from app.scopes import MembroScope, CellScope
-    from sqlalchemy import func
+    from sqlalchemy import func, case
+    from app.models import Role, Celula, Ide, Membro, PapelMembro
     
     current_user_id = get_jwt_identity()
     user = db.session.get(User, current_user_id)
@@ -289,11 +290,43 @@ def get_dashboard_stats():
         celula_query = CellScope.apply(celula_query, user)
     celulas_data = [c.to_dict() for c in celula_query.all()]
     
+    # Cells per supervisor (ordered by IDE then quantity)
+    supervisor_stats = db.session.query(
+        Membro.nome.label('supervisor_nome'),
+        Ide.cor.label('ide_cor'),
+        func.count(Celula.id).label('quantidade'),
+        Ide.nome.label('ide_nome')
+    ).select_from(Celula)\
+     .join(Membro, Celula.supervisor_id == Membro.id)\
+     .join(Ide, Celula.ide_id == Ide.id)\
+     .filter(Celula.id.in_(celula_query.with_entities(Celula.id)))\
+     .group_by(Membro.id, Membro.nome, Ide.id, Ide.nome, Ide.cor)\
+     .order_by(Ide.nome.asc(), func.count(Celula.id).desc()).all()
+    
+    # Cells per IDE
+    ide_stats = db.session.query(
+        Ide.nome.label('ide_nome'),
+        Ide.cor.label('ide_cor'),
+        func.count(Celula.id).label('quantidade')
+    ).select_from(Celula)\
+     .join(Ide, Celula.ide_id == Ide.id)\
+     .filter(Celula.id.in_(celula_query.with_entities(Celula.id)))\
+     .group_by(Ide.id, Ide.nome, Ide.cor)\
+     .order_by(func.count(Celula.id).desc()).all()
+    
     return jsonify({
         'total_membros': total_membros,
         'roles_distribution': [
             {'papel': row[0], 'quantidade': row[1]} 
             for row in roles_dist
+        ],
+        'celulas_por_supervisor': [
+            {'supervisor': row[0], 'cor': row[1], 'quantidade': row[2], 'ide': row[3]}
+            for row in supervisor_stats
+        ],
+        'celulas_por_ide': [
+            {'ide': row[0], 'cor': row[1], 'quantidade': row[2]}
+            for row in ide_stats
         ],
         'celulas': celulas_data
     })
