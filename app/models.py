@@ -13,11 +13,15 @@ class Convite(db.Model):
     data_expiracao = db.Column(db.DateTime, nullable=False)
     papel_destino = db.Column(db.String(50), nullable=True) # Papel que o convidado terá
     supervisor_destino_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True) # Supervisor imediato
+    celula_id = db.Column(db.Integer, db.ForeignKey('celulas.id'), nullable=True) # Célula de destino
+    nucleo_id = db.Column(db.Integer, db.ForeignKey('nucleos.id'), nullable=True)  # Núcleo de destino
     usado = db.Column(db.Boolean, default=False)
 
     ide = db.relationship('Ide', backref='convites')
     criador = db.relationship('User', backref='convites_criados')
     supervisor_destino = db.relationship('Membro', foreign_keys=[supervisor_destino_id])
+    celula = db.relationship('Celula', foreign_keys=[celula_id])
+    nucleo_destino = db.relationship('Nucleo', foreign_keys=[nucleo_id])
 
     def esta_valido(self):
         agora = datetime.utcnow()
@@ -43,6 +47,16 @@ class Convite(db.Model):
             criador_nome = getattr(criador_membro, 'nome', None) if criador_membro else getattr(criador, 'username', 'N/A')
             criador_role = getattr(criador, 'role', 'membro')
             
+            # Pegar lider_id do criador (membro que gerou o convite)
+            criador_membro_id = getattr(criador_membro, 'id', None) if criador_membro else None
+            
+            # Pegar dados da célula
+            celula = getattr(self, 'celula', None)
+            celula_nome = getattr(celula, 'nome', None) if celula else None
+            celula_supervisor_id = getattr(celula, 'supervisor_id', None) if celula else None
+            celula_lider_id = getattr(celula, 'lider_id', None) if celula else None
+            celula_pastor_id = getattr(celula, 'pastor_id', None) if celula else None
+
             data = {
                 'id': self.id,
                 'token': token,
@@ -55,6 +69,13 @@ class Convite(db.Model):
                 'supervisor_destino_nome': supervisor_nome,
                 'criado_por_nome': criador_nome,
                 'criado_por_papel': criador_role,
+                'criado_por_membro_id': criador_membro_id,
+                'celula_id': getattr(self, 'celula_id', None),
+                'celula_nome': celula_nome,
+                'celula_supervisor_id': celula_supervisor_id,
+                'celula_lider_id': celula_lider_id,
+                'celula_pastor_id': celula_pastor_id,
+                'nucleo_id': getattr(self, 'nucleo_id', None),
                 'valido': self.esta_valido()
             }
             

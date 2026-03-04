@@ -4,6 +4,26 @@ from app.api import api
 from app.models import db, Celula, User
 from app import db
 
+from app.models import Celula, Nucleo, MembroNucleo
+
+def sync_lideranca_nucleo(celula):
+    # 1. Garantir que exista um Núcleo Principal
+    nucleo = Nucleo.query.filter_by(celula_id=celula.id).first()
+    if not nucleo:
+        nucleo = Nucleo(nome="Núcleo Principal", celula_id=celula.id)
+        db.session.add(nucleo)
+        db.session.flush() # Para pegar o id do núcleo
+    
+    # 2. Identificar IDs que devem estar no núcleo (Líder e Vice)
+    liderança_ids = [id for id in [celula.lider_id, celula.vice_lider_id] if id]
+    
+    # 3. Adicionar se não existirem
+    for m_id in liderança_ids:
+        exists = MembroNucleo.query.filter_by(nucleo_id=nucleo.id, membro_id=m_id).first()
+        if not exists:
+            mn = MembroNucleo(nucleo_id=nucleo.id, membro_id=m_id, is_convidado=False)
+            db.session.add(mn)
+
 @api.route('/celulas', methods=['GET'])
 @jwt_required()
 def get_celulas():
@@ -12,6 +32,10 @@ def get_celulas():
     
     if not user:
         return jsonify({'error': 'User not found'}), 404
+
+    # Paginação
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
 
     # Filtros
     nome = request.args.get('nome')
@@ -32,9 +56,15 @@ def get_celulas():
         query = query.filter(Celula.lider_id == lider_id)
     if supervisor_id:
         query = query.filter(Celula.supervisor_id == supervisor_id)
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
-    celulas_list = query.all()
-    return jsonify([c.to_dict() for c in celulas_list])
+    return jsonify({
+        'celulas': [c.to_dict() for c in pagination.items],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page
+    })
 
 @api.route('/hello-test')
 def hello_test():
@@ -135,8 +165,10 @@ def create_celula():
 
     celula = Celula()
     update_celula_data(celula, data)
-    
     db.session.add(celula)
+    db.session.flush()
+    sync_lideranca_nucleo(celula)
+    
     try:
         db.session.commit()
         return jsonify(celula.to_dict()), 201
@@ -153,6 +185,7 @@ def update_celula(id):
         
     data = request.get_json() or {}
     update_celula_data(celula, data)
+    sync_lideranca_nucleo(celula)
     
     try:
         db.session.commit()

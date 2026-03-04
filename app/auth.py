@@ -25,23 +25,25 @@ def generate_invite():
     current_user_id = get_jwt_identity()
     user = db.session.get(User, current_user_id)
     
-    # Check if user can generate invite (Pastor or Supervisor)
-    allowed_roles = ['pastor', 'pastor_de_rede', 'supervisor', 'admin']
+    # Check if user can generate invite
+    allowed_roles = ['pastor', 'pastor_de_rede', 'supervisor', 'admin', 'lider_de_celula']
     if user.role not in allowed_roles:
         return jsonify({'error': 'Ação não permitida para seu cargo'}), 403
 
     data = request.get_json()
     ide_id = data.get('ide_id')
     papel_destino = data.get('papel_destino')
-    supervisor_id = data.get('supervisor_id') # Opcional: só para Pastor convidando Líder
+    supervisor_id = data.get('supervisor_id')
+    celula_id = data.get('celula_id')  # Novo: célula de destino
+    nucleo_id = data.get('nucleo_id')  # Novo: núcleo de destino
 
     # Validação de Hierarquia
     hierarchy = {
-        'admin': ['pastor_de_rede', 'supervisor', 'lider_de_celula', 'vice_lider_de_celula'],
-        'pastor_de_rede': ['supervisor', 'lider_de_celula'],
-        'pastor': ['supervisor', 'lider_de_celula'],
-        'supervisor': ['lider_de_celula'],
-        'lider_de_celula': ['vice_lider_de_celula']
+        'admin': ['pastor_de_rede', 'supervisor', 'lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo'],
+        'pastor_de_rede': ['supervisor', 'lider_de_celula', 'membro', 'membro_de_nucleo'],
+        'pastor': ['supervisor', 'lider_de_celula', 'membro', 'membro_de_nucleo'],
+        'supervisor': ['lider_de_celula', 'membro', 'membro_de_nucleo'],
+        'lider_de_celula': ['vice_lider_de_celula', 'membro', 'membro_de_nucleo'],
     }
 
     user_role = user.role
@@ -52,7 +54,6 @@ def generate_invite():
         return jsonify({'error': f'Você não tem permissão para convidar um {papel_destino}'}), 403
 
     if not ide_id:
-        # Default to user's IDE if supervisor/pastor
         if user.membro and user.membro.ide_id:
             ide_id = user.membro.ide_id
         elif user.role == 'admin':
@@ -64,16 +65,21 @@ def generate_invite():
         return jsonify({'error': 'IDE_ID é obrigatório'}), 400
 
     now = datetime.utcnow()
-    data_expiracao = (now + timedelta(days=1)).replace(hour=23, minute=59, second=59, microsecond=999999)
+    # Convites de membro duram 5 dias; demais continuam 1 dia
+    days = 5 if papel_destino in ('membro', 'membro_de_nucleo') else 1
+    data_expiracao = (now + timedelta(days=days)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     token = secrets.token_urlsafe(16)
+    from app.models import Convite
     invite = Convite(
         token=token,
         ide_id=ide_id,
         criado_por_id=user.id,
         data_expiracao=data_expiracao,
         papel_destino=papel_destino,
-        supervisor_destino_id=supervisor_id
+        supervisor_destino_id=supervisor_id,
+        celula_id=celula_id,
+        nucleo_id=nucleo_id
     )
     db.session.add(invite)
     try:
@@ -134,10 +140,24 @@ def register():
             except ValueError:
                 return None
 
-        # 1. Criar Membro
-        lider_id = invite.criador.membro_id if invite and invite.criador else None
-        if invite and invite.supervisor_destino_id:
-            lider_id = invite.supervisor_destino_id
+        # Montar dados de hierarquia a partir do convite
+        lider_id = None
+        supervisor_id_destino = None
+        pastor_id_destino = None
+
+        if invite:
+            # lider_id = quem criou o convite (normalmente o líder da célula)
+            lider_id = invite.criador.membro_id if invite.criador else None
+
+            # Se tem célula no convite, usa os dados da célula para preencher a hierarquia
+            if invite.celula:
+                lider_id = invite.celula.lider_id
+                supervisor_id_destino = invite.celula.supervisor_id
+                # pastor vem da IDE da célula
+                if invite.celula.ide:
+                    pastor_id_destino = invite.celula.ide.pastor_id
+            elif invite.supervisor_destino_id:
+                lider_id = invite.supervisor_destino_id
 
         membro = Membro(
             nome=data['nome'],
@@ -150,8 +170,8 @@ def register():
             data_batismo=parse_date(data.get('data_batismo')),
             ide_id=ide_id,
             lider_id=lider_id,
-            supervisor_id=lider_id if papel in ['lider_de_celula', 'vice_lider_de_celula'] else None,
-            pastor_id=invite.ide.pastor_id if invite and invite.ide else None,
+            supervisor_id=supervisor_id_destino,
+            pastor_id=pastor_id_destino,
             ativo=True
         )
 
@@ -174,7 +194,27 @@ def register():
         )
         db.session.add(endereco)
 
-        # 4. Criar Usuário
+        # 4. Vincular ao núcleo automaticamente se o convite tiver celula_id ou nucleo_id
+        if invite:
+            target_nucleo_id = invite.nucleo_id
+            
+            # Se não tem núcleo mas tem célula, busca o primeiro núcleo da célula
+            if not target_nucleo_id and invite.celula_id:
+                from app.models import Nucleo
+                n = Nucleo.query.filter_by(celula_id=invite.celula_id).first()
+                if n:
+                    target_nucleo_id = n.id
+
+            if target_nucleo_id:
+                from app.models import MembroNucleo
+                mn = MembroNucleo(
+                    nucleo_id=target_nucleo_id,
+                    membro_id=membro.id,
+                    is_convidado=False
+                )
+                db.session.add(mn)
+
+        # 5. Criar Usuário
         user = User(
             username=data['email'],
             email=data['email'],
@@ -183,7 +223,7 @@ def register():
         user.set_password(data['password'])
         db.session.add(user)
 
-        # 5. Marcar convite como usado
+        # 6. Marcar convite como usado
         if invite:
             invite.usado = True
 
