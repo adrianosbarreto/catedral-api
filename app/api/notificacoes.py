@@ -55,6 +55,7 @@ def dispatch_push_task(message_id):
         count_failed = 0
         
         for sub in subs:
+            logger.info(f"Processing sub {sub.id} for message {message_id}")
             sub_info = {
                 "endpoint": sub.endpoint,
                 "keys": {
@@ -70,11 +71,15 @@ def dispatch_push_task(message_id):
                     vapid_claims=vapid_claims
                 )
                 count_success += 1
+                logger.info(f"Push success for sub {sub.id}")
             except WebPushException as ex:
-                logger.error(f"WebPush Error: {ex}")
+                logger.error(f"WebPush Error on sub {sub.id}: {ex}")
                 count_failed += 1
                 if ex.response and ex.response.status_code in [404, 410]:
                     db.session.delete(sub)
+            except Exception as e:
+                logger.error(f"Unexpected error on sub {sub.id}: {e}")
+                count_failed += 1
                     
         msg.success_count = count_success
         msg.failed_count = count_failed
