@@ -395,6 +395,63 @@ class InscricaoEvento(db.Model):
             'data_inscricao': self.data_inscricao.isoformat()
         }
 
+class AulaLideranca(db.Model):
+    __tablename__ = 'aulas_lideranca'
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(200), nullable=False)
+    descricao = db.Column(db.Text, nullable=True)
+    data_hora = db.Column(db.DateTime, nullable=False)
+    data_hora_fim = db.Column(db.DateTime, nullable=True)
+    local_nome = db.Column(db.String(200), nullable=True)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
+    raio_checkin = db.Column(db.Integer, default=100) # metros
+    ide_id = db.Column(db.Integer, db.ForeignKey('ides.id'), nullable=True) # se nulo, geral
+    ativa = db.Column(db.Boolean, default=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    ide = db.relationship('Ide', backref='aulas_lideranca')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'titulo': self.titulo,
+            'descricao': self.descricao,
+            'data_hora': self.data_hora.isoformat() if self.data_hora else None,
+            'data_hora_fim': self.data_hora_fim.isoformat() if self.data_hora_fim else None,
+            'local_nome': self.local_nome,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'raio_checkin': self.raio_checkin,
+            'ide_id': self.ide_id,
+            'ide_nome': self.ide.nome if self.ide else 'Geral',
+            'ativa': self.ativa
+        }
+
+class FrequenciaAulaLideranca(db.Model):
+    __tablename__ = 'frequencias_aula_lideranca'
+    id = db.Column(db.Integer, primary_key=True)
+    aula_id = db.Column(db.Integer, db.ForeignKey('aulas_lideranca.id'), nullable=False)
+    membro_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=False)
+    presente = db.Column(db.Boolean, default=True)
+    metodo = db.Column(db.String(20), default='manual') # 'manual' ou 'checkin'
+    data_registro = db.Column(db.DateTime, default=datetime.utcnow)
+
+    aula = db.relationship('AulaLideranca', backref=db.backref('frequencias', cascade='all, delete-orphan'))
+    membro = db.relationship('Membro', backref=db.backref('frequencias_lideranca', cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'aula_id': self.aula_id,
+            'membro_id': self.membro_id,
+            'membro_nome': self.membro.nome if self.membro else None,
+            'membro_ide_nome': self.membro.ide.nome if self.membro and self.membro.ide else None,
+            'presente': self.presente,
+            'metodo': self.metodo,
+            'data_registro': self.data_registro.isoformat() if self.data_registro else None
+        }
+
 class Celula(db.Model):
     __tablename__ = 'celulas'
 
