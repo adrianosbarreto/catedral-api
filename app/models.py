@@ -296,6 +296,12 @@ class PapelMembro(db.Model):
             'role_label': self.role_rel.label if self.role_rel else None
         }
 
+# Tabela associativa para permitir que um evento pertença a múltiplas IDEs
+evento_ides = db.Table('evento_ides',
+    db.Column('evento_id', db.Integer, db.ForeignKey('eventos.id'), primary_key=True),
+    db.Column('ide_id', db.Integer, db.ForeignKey('ides.id'), primary_key=True)
+)
+
 class Evento(db.Model):
     __tablename__ = 'eventos'
     id = db.Column(db.Integer, primary_key=True)
@@ -306,6 +312,27 @@ class Evento(db.Model):
     local = db.Column(db.String(100), nullable=False)
     tipo_evento = db.Column(db.String(50), nullable=False)
     capacidade_maxima = db.Column(db.Integer)
+    imagem_banner = db.Column(db.String(500), nullable=True)
+    criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # should be nullable for existing
+    cta_texto = db.Column(db.String(50), nullable=True)
+    cta_link = db.Column(db.String(500), nullable=True)
+    ide_id = db.Column(db.Integer, db.ForeignKey('ides.id'), nullable=True) # Legado: Mantido por compatibilidade inicial
+    config_mensagem_antecedencia = db.Column(db.Integer, default=0) # 0, 5, 7, 10
+    tipo_visibilidade = db.Column(db.String(20), default='igreja')
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Novos campos para gestão de participantes
+    gerenciar_participantes = db.Column(db.Boolean, default=False)
+    instrucoes_inscricao = db.Column(db.Text, nullable=True)
+    valor_inscricao = db.Column(db.Float, nullable=True)
+    exibir_vagas_restantes = db.Column(db.Boolean, default=False)
+    perguntas = db.Column(db.JSON, default=list) # [{label, type, options, required}]
+
+    criador = db.relationship('User', foreign_keys=[criado_por_id])
+    ide_legado = db.relationship('Ide', foreign_keys=[ide_id])
+    
+    # Relacionamento com múltiplas IDEs
+    ides = db.relationship('Ide', secondary=evento_ides, backref=db.backref('eventos_relacionados', lazy='dynamic'))
 
     def to_dict(self):
         return {
@@ -316,7 +343,56 @@ class Evento(db.Model):
             'data_fim': self.data_fim.isoformat() if self.data_fim else None,
             'local': self.local,
             'tipo_evento': self.tipo_evento,
-            'capacidade_maxima': self.capacidade_maxima
+            'capacidade_maxima': self.capacidade_maxima,
+            'imagem_banner': self.imagem_banner,
+            'criado_por_id': self.criado_por_id,
+            'cta_texto': self.cta_texto,
+            'cta_link': self.cta_link,
+            'ide_id': self.ide_id,
+            'ide_nome': self.ide_legado.nome if self.ide_legado else None,
+            'ides': [i.id for i in self.ides],
+            'ides_detalhes': [{'id': i.id, 'nome': i.nome} for i in self.ides],
+            'config_mensagem_antecedencia': self.config_mensagem_antecedencia,
+            'tipo_visibilidade': self.tipo_visibilidade,
+            'ativo': self.ativo,
+            'gerenciar_participantes': self.gerenciar_participantes,
+            'instrucoes_inscricao': self.instrucoes_inscricao,
+            'valor_inscricao': self.valor_inscricao,
+            'exibir_vagas_restantes': self.exibir_vagas_restantes,
+            'perguntas': self.perguntas or [],
+            'passou': self.data_fim < datetime.utcnow() if self.data_fim else False
+        }
+
+class InscricaoEvento(db.Model):
+    __tablename__ = 'inscricoes_eventos'
+    id = db.Column(db.Integer, primary_key=True)
+    evento_id = db.Column(db.Integer, db.ForeignKey('eventos.id'), nullable=False)
+    membro_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True)
+    nome_externo = db.Column(db.String(100), nullable=True)
+    email_externo = db.Column(db.String(120), nullable=True)
+    telefone_externo = db.Column(db.String(20), nullable=True)
+    cpf_externo = db.Column(db.String(20), nullable=True)
+    status = db.Column(db.String(20), default='pendente') # 'pendente', 'confirmado', 'cancelado'
+    pago = db.Column(db.Boolean, default=False)
+    data_inscricao = db.Column(db.DateTime, default=datetime.utcnow)
+    respostas = db.Column(db.JSON, default=dict)
+    
+    evento = db.relationship('Evento', backref=db.backref('inscricoes', cascade='all, delete-orphan'))
+    membro = db.relationship('Membro', backref=db.backref('eventos_inscritos', cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'evento_id': self.evento_id,
+            'membro_id': self.membro_id,
+            'nome': self.membro.nome if self.membro else self.nome_externo,
+            'email': self.membro.email if self.membro else self.email_externo,
+            'telefone': self.membro.telefone if self.membro else self.telefone_externo,
+            'cpf': self.membro.cpf if self.membro else self.cpf_externo,
+            'status': self.status,
+            'pago': self.pago,
+            'respostas': self.respostas or {},
+            'data_inscricao': self.data_inscricao.isoformat()
         }
 
 class Celula(db.Model):
