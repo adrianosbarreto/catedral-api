@@ -62,8 +62,8 @@ class Convite(db.Model):
                 'token': token,
                 'ide_id': ide_id,
                 'ide_nome': ide_nome,
-                'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None,
-                'data_expiracao': self.data_expiracao.isoformat() if self.data_expiracao else None,
+                'data_criacao': self.data_criacao.isoformat() + 'Z' if self.data_criacao else None,
+                'data_expiracao': self.data_expiracao.isoformat() + 'Z' if self.data_expiracao else None,
                 'papel_destino': getattr(self, 'papel_destino', None),
                 'supervisor_destino_id': getattr(self, 'supervisor_destino_id', None),
                 'supervisor_destino_nome': supervisor_nome,
@@ -339,8 +339,8 @@ class Evento(db.Model):
             'id': self.id,
             'titulo': self.titulo,
             'descricao': self.descricao,
-            'data_inicio': self.data_inicio.isoformat() if self.data_inicio else None,
-            'data_fim': self.data_fim.isoformat() if self.data_fim else None,
+            'data_inicio': self.data_inicio.isoformat() + 'Z' if self.data_inicio else None,
+            'data_fim': self.data_fim.isoformat() + 'Z' if self.data_fim else None,
             'local': self.local,
             'tipo_evento': self.tipo_evento,
             'capacidade_maxima': self.capacidade_maxima,
@@ -392,7 +392,7 @@ class InscricaoEvento(db.Model):
             'status': self.status,
             'pago': self.pago,
             'respostas': self.respostas or {},
-            'data_inscricao': self.data_inscricao.isoformat()
+            'data_inscricao': self.data_inscricao.isoformat() + 'Z' if self.data_inscricao else None
         }
 
 class AulaLideranca(db.Model):
@@ -417,8 +417,8 @@ class AulaLideranca(db.Model):
             'id': self.id,
             'titulo': self.titulo,
             'descricao': self.descricao,
-            'data_hora': self.data_hora.isoformat() if self.data_hora else None,
-            'data_hora_fim': self.data_hora_fim.isoformat() if self.data_hora_fim else None,
+            'data_hora': self.data_hora.isoformat() + 'Z' if self.data_hora else None,
+            'data_hora_fim': self.data_hora_fim.isoformat() + 'Z' if self.data_hora_fim else None,
             'local_nome': self.local_nome,
             'latitude': self.latitude,
             'longitude': self.longitude,
@@ -449,7 +449,7 @@ class FrequenciaAulaLideranca(db.Model):
             'membro_ide_nome': self.membro.ide.nome if self.membro and self.membro.ide else None,
             'presente': self.presente,
             'metodo': self.metodo,
-            'data_registro': self.data_registro.isoformat() if self.data_registro else None
+            'data_registro': self.data_registro.isoformat() + 'Z' if self.data_registro else None
         }
 
 class Celula(db.Model):
@@ -596,8 +596,8 @@ class SolicitacaoTransferencia(db.Model):
             'solicitante_id': self.solicitante_id,
             'solicitante_nome': self.solicitante.membro.nome if self.solicitante and self.solicitante.membro else self.solicitante.username,
             'status': self.status,
-            'data_solicitacao': self.data_solicitacao.isoformat(),
-            'data_resposta': self.data_resposta.isoformat() if self.data_resposta else None
+            'data_solicitacao': self.data_solicitacao.isoformat() + 'Z' if self.data_solicitacao else None,
+            'data_resposta': self.data_resposta.isoformat() + 'Z' if self.data_resposta else None
         }
 
 # Relationship associations
@@ -625,13 +625,13 @@ class Noticia(db.Model):
             'id': self.id,
             'titulo': self.titulo,
             'foto_url': self.foto_url,
-            'data_inicio': self.data_inicio.isoformat() if self.data_inicio else None,
-            'data_fim': self.data_fim.isoformat() if self.data_fim else None,
+            'data_inicio': self.data_inicio.isoformat() + 'Z' if self.data_inicio else None,
+            'data_fim': self.data_fim.isoformat() + 'Z' if self.data_fim else None,
             'mostrar_ao_iniciar': self.mostrar_ao_iniciar,
             'todas_ides': self.todas_ides,
             'ides': [ide.id for ide in self.ides],
             'ativo': self.ativo,
-            'criado_em': self.criado_em.isoformat() if self.criado_em else None
+            'criado_em': self.criado_em.isoformat() + 'Z' if self.criado_em else None
         }
 
 class NotificationSubscription(db.Model):
@@ -650,7 +650,7 @@ class NotificationSubscription(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'endpoint': self.endpoint,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
         }
 
 class PushMessage(db.Model):
