@@ -3,6 +3,11 @@ Servidor de produção para o Igreja em Foco Backend
 Utiliza Waitress como servidor WSGI para ambientes de produção
 """
 import os
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do arquivo .env
+load_dotenv()
+
 from waitress import serve
 from app import create_app
 
