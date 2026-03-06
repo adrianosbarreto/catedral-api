@@ -36,10 +36,14 @@ def dispatch_push_task(message_id):
         vapid_claims = {"sub": "mailto:admin@catedral.com"}
         
         # Build query for subscriptions
-        subs_query = NotificationSubscription.query.join(User, NotificationSubscription.user_id == User.id)
+        subs_query = NotificationSubscription.query
         
         if msg.target_ide_id or msg.target_supervisor_id:
-            subs_query = subs_query.join(Membro, User.membro_id == Membro.id)
+            # Join Membro via User (left outer join para não perder subs anônimas se não houver filtro, 
+            # mas aqui como TEM filtro, o join com Membro é necessário)
+            subs_query = subs_query.join(User, NotificationSubscription.user_id == User.id)\
+                                   .join(Membro, User.membro_id == Membro.id)
+            
             if msg.target_ide_id:
                 subs_query = subs_query.filter(Membro.ide_id == msg.target_ide_id)
             if msg.target_supervisor_id:
@@ -220,3 +224,17 @@ def vapid_public_key():
     if not public_key:
         return jsonify({'error': 'Public Key not configured'}), 500
     return jsonify({'publicKey': public_key}), 200
+
+@api.route('/notifications/stats', methods=['GET'])
+@jwt_required()
+def notification_stats():
+    current_user = get_jwt_identity()
+    user = User.query.get(current_user)
+    if not user or user.role not in ['admin', 'pastor_de_rede', 'pastor']:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    count = NotificationSubscription.query.count()
+    return jsonify({
+        'total_subscriptions': count,
+        'active': True
+    }), 200
