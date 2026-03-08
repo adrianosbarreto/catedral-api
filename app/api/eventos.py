@@ -54,13 +54,34 @@ def get_eventos():
     eventos = query.order_by(Evento.data_inicio).all()
     return jsonify([evento.to_dict() for evento in eventos])
 
+# Rate limiting simples em memória para o endpoint público
+from collections import defaultdict
+import time
+_rate_limit_storage = defaultdict(list)
+
 @api.route('/public/eventos', methods=['GET'])
 def get_eventos_publico():
+    # Rate limiting: Max 30 requisições por minuto por IP
+    ip = request.remote_addr
+    now = time.time()
+    # Limpar registros antigos para este IP
+    _rate_limit_storage[ip] = [t for t in _rate_limit_storage[ip] if now - t < 60]
+    
+    if len(_rate_limit_storage[ip]) >= 30:
+        return jsonify({'error': 'Muitas requisições. Tente novamente em um minuto.'}), 429
+    
+    _rate_limit_storage[ip].append(now)
+
     agora = datetime.utcnow()
-    # Retorna apenas eventos ativos e que não finalizaram
-    query = Evento.query.filter(Evento.ativo == True, Evento.data_fim >= agora)
+    # Retorna apenas eventos ativos, que não finalizaram e com visibilidade pública
+    query = Evento.query.filter(
+        Evento.ativo == True, 
+        Evento.data_fim >= agora,
+        Evento.tipo_visibilidade == 'publico'
+    )
     eventos = query.order_by(Evento.data_inicio).all()
-    return jsonify([evento.to_dict() for evento in eventos])
+    # Usa to_public_dict para segurança de dados
+    return jsonify([evento.to_public_dict() for evento in eventos])
 
 @api.route('/eventos/<int:id>', methods=['GET'])
 @jwt_required()
@@ -188,6 +209,9 @@ def update_evento(id):
         if 'imagem_banner' in data: evento.imagem_banner = data['imagem_banner']
         if 'cta_texto' in data: evento.cta_texto = data['cta_texto']
         if 'cta_link' in data: evento.cta_link = data['cta_link']
+        if 'tipo_visibilidade' in data: evento.tipo_visibilidade = data['tipo_visibilidade']
+        if 'config_mensagem_antecedencia' in data: 
+            evento.config_mensagem_antecedencia = int(data['config_mensagem_antecedencia'])
         # Múltiplas IDEs
         if 'ides' in data and isinstance(data['ides'], list):
             from app.models import Ide
