@@ -66,19 +66,17 @@ def get_celulas():
         'current_page': page
     })
 
+@api.route('/celulas/public', methods=['GET'])
+def get_celulas_public():
+    celulas = Celula.query.filter_by(ativo=True).order_by(Celula.nome).all()
+    return jsonify([{'id': c.id, 'nome': c.nome, 'bairro': c.bairro, 'lider_nome': c.lider.nome if c.lider else None} for c in celulas])
+
 @api.route('/hello-test')
 def hello_test():
     return jsonify({"message": "hello"})
 
-@api.route('/celulas/nearby', methods=['GET'])
-@jwt_required()
-def get_nearby_cells():
-    current_user_id = get_jwt_identity()
-    user = db.session.get(User, current_user_id)
-    
-    if not user or user.role != 'admin':
-        return jsonify({'error': 'Unauthorized. Admin only.'}), 403
-
+@api.route('/celulas/public/nearby', methods=['GET'])
+def get_nearby_cells_public():
     lat = request.args.get('lat', type=float)
     lng = request.args.get('lng', type=float)
     radius = request.args.get('radius', 10.0, type=float) # Default 10km
@@ -88,8 +86,6 @@ def get_nearby_cells():
 
     from sqlalchemy import func
     
-    # Haversine formula to calculate distance in KM
-    # distance = 6371 * acos(cos(lat1) * cos(lat2) * cos(lng2 - lng1) + sin(lat1) * sin(lat2))
     distance_expr = func.acos(
         func.cos(func.radians(lat)) * func.cos(func.radians(Celula.latitude)) * 
         func.cos(func.radians(Celula.longitude) - func.radians(lng)) + 
@@ -100,15 +96,19 @@ def get_nearby_cells():
         Celula.ativo == True,
         Celula.latitude.isnot(None),
         Celula.longitude.isnot(None)
-    ).filter(distance_expr <= radius).order_by('distance').limit(50)
+    ).filter(distance_expr <= radius).order_by('distance').limit(5)
 
     results_raw = nearby_cells_query.all()
 
     results = []
     for cell, distance in results_raw:
-        d = cell.to_dict()
-        d['distance'] = round(float(distance), 2)
-        results.append(d)
+        results.append({
+            'id': cell.id,
+            'nome': cell.nome,
+            'bairro': cell.bairro,
+            'lider_nome': cell.lider.nome if cell.lider else None,
+            'distance': round(float(distance), 2)
+        })
 
     return jsonify(results)
 

@@ -245,7 +245,9 @@ def checkin_lideranca():
         fim_valido = aula.data_hora + timedelta(hours=8)
 
     if agora < inicio_valido or agora > fim_valido:
-        msg = f'Fora do horário permitido. Check-in disponível entre {inicio_valido.strftime("%H:%M")} e {fim_valido.strftime("%H:%M")}'
+        inicio_br = inicio_valido - timedelta(hours=3)
+        fim_br = fim_valido - timedelta(hours=3)
+        msg = f'Fora do horário permitido. Check-in disponível entre {inicio_br.strftime("%H:%M")} e {fim_br.strftime("%H:%M")}'
         return jsonify({'error': msg}), 400
 
     # 2. Validar Geolocalização se a aula tiver coordenadas

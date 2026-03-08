@@ -320,6 +320,7 @@ class Evento(db.Model):
     config_mensagem_antecedencia = db.Column(db.Integer, default=0) # 0, 5, 7, 10
     tipo_visibilidade = db.Column(db.String(20), default='igreja')
     ativo = db.Column(db.Boolean, default=True)
+    is_batismo = db.Column(db.Boolean, default=False)
     
     # Novos campos para gestão de participantes
     gerenciar_participantes = db.Column(db.Boolean, default=False)
@@ -355,6 +356,7 @@ class Evento(db.Model):
             'config_mensagem_antecedencia': self.config_mensagem_antecedencia,
             'tipo_visibilidade': self.tipo_visibilidade,
             'ativo': self.ativo,
+            'is_batismo': getattr(self, 'is_batismo', False),
             'gerenciar_participantes': self.gerenciar_participantes,
             'instrucoes_inscricao': self.instrucoes_inscricao,
             'valor_inscricao': self.valor_inscricao,
@@ -446,7 +448,7 @@ class FrequenciaAulaLideranca(db.Model):
             'aula_id': self.aula_id,
             'membro_id': self.membro_id,
             'membro_nome': self.membro.nome if self.membro else None,
-            'membro_ide_nome': self.membro.ide.nome if self.membro and self.membro.ide else None,
+            'membro_ide_nome': self.membro and self.membro.ide.nome if self.membro and self.membro.ide else None,
             'presente': self.presente,
             'metodo': self.metodo,
             'data_registro': self.data_registro.isoformat() + 'Z' if self.data_registro else None
@@ -488,7 +490,8 @@ class Celula(db.Model):
             'supervisor_id': self.supervisor_id,
             'lider_id': self.lider_id,
             'vice_lider_id': self.vice_lider_id,
-            'pastor_id': self.ide.pastor_id if self.ide else None,
+            'pastor_id': self.ide.pastor_id if (self.ide and self.ide.pastor_id) else (self.lider.pastor_id if self.lider else None),
+            'pastor_nome': self.ide.pastor.nome if (self.ide and self.ide.pastor) else (self.lider.pastor_id_rel.nome if (self.lider and self.lider.pastor_id_rel) else None),
             'dia_reuniao': self.dia_reuniao,
             'horario_reuniao': self.horario_reuniao,
             'logradouro': self.logradouro,
@@ -501,7 +504,12 @@ class Celula(db.Model):
             'latitude': self.latitude,
             'longitude': self.longitude,
             'ativo': self.ativo,
-            'ide': {'id': self.ide.id, 'nome': self.ide.nome} if self.ide else None,
+            'ide': {
+                'id': self.ide.id, 
+                'nome': self.ide.nome,
+                'pastor_id': self.ide.pastor_id,
+                'pastor_nome': self.ide.pastor.nome if self.ide.pastor else None
+            } if self.ide else None,
             'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome, 'telefone': self.supervisor.telefone} if self.supervisor else None,
             'lider': {'id': self.lider.id, 'nome': self.lider.nome, 'telefone': self.lider.telefone} if self.lider else None,
             'vice_lider': {'id': self.vice_lider.id, 'nome': self.vice_lider.nome, 'telefone': self.vice_lider.telefone} if self.vice_lider else None,

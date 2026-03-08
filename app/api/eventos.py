@@ -120,6 +120,7 @@ def create_evento():
         evento.config_mensagem_antecedencia = int(data.get('config_mensagem_antecedencia', 0))
         evento.tipo_visibilidade = data.get('tipo_visibilidade', 'igreja')
         evento.ativo = data.get('ativo', True)
+        evento.is_batismo = data.get('is_batismo', False)
         evento.criado_por_id = current_user_id
         
         # Gestão de participantes
@@ -183,6 +184,7 @@ def update_evento(id):
             evento.capacidade_maxima = int(data['capacidade_maxima']) if data['capacidade_maxima'] else None
             
         # Novos campos
+        if 'is_batismo' in data: evento.is_batismo = data['is_batismo']
         if 'imagem_banner' in data: evento.imagem_banner = data['imagem_banner']
         if 'cta_texto' in data: evento.cta_texto = data['cta_texto']
         if 'cta_link' in data: evento.cta_link = data['cta_link']
@@ -236,3 +238,23 @@ def delete_evento(id):
     db.session.delete(evento)
     db.session.commit()
     return jsonify({'message': 'Deleted successfully'})
+
+@api.route('/eventos/proximo-batismo', methods=['GET'])
+@jwt_required()
+def get_proximo_batismo():
+    agora = datetime.utcnow()
+    from sqlalchemy import or_
+    evento = Evento.query.filter(
+        Evento.ativo == True,
+        Evento.data_fim >= agora,
+        or_(
+            Evento.is_batismo == True,
+            Evento.tipo_evento.ilike('%batismo%'),
+            Evento.titulo.ilike('%batismo%')
+        )
+    ).order_by(Evento.data_inicio).first()
+
+    if not evento:
+        return jsonify({'error': 'Nenhum evento de batismo encontrado'}), 404
+        
+    return jsonify(evento.to_dict())

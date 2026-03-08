@@ -167,6 +167,77 @@ def get_my_hierarchy():
 
     return jsonify(hierarchy)
 
+@api.route('/membros/me/frequencias', methods=['GET'])
+@jwt_required()
+def get_my_frequencias():
+    from flask_jwt_extended import get_jwt_identity
+    from app.models import User, FrequenciaCelula, FrequenciaAulaLideranca, MembroNucleo
+    
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    if not user or not user.membro:
+        return jsonify({'error': 'Membro não encontrado'}), 404
+
+    membro_id = user.membro.id
+
+    from datetime import datetime
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+
+    # Base query for lideranca
+    lideranca_query = FrequenciaAulaLideranca.query.join(FrequenciaAulaLideranca.aula).filter(
+        FrequenciaAulaLideranca.membro_id == membro_id, 
+        FrequenciaAulaLideranca.presente == True
+    )
+
+    if year and month:
+        from sqlalchemy import extract
+        lideranca_query = lideranca_query.filter(
+            extract('year', FrequenciaAulaLideranca.data_registro) == year,
+            extract('month', FrequenciaAulaLideranca.data_registro) == month
+        )
+
+    frequencias_lideranca = lideranca_query.all()
+
+    membros_nucleo_ids = db.session.query(MembroNucleo.id).filter_by(membro_id=membro_id).all()
+    mn_ids = [mn[0] for mn in membros_nucleo_ids]
+
+    frequencias_celula = []
+    if mn_ids:
+        celula_query = FrequenciaCelula.query.filter(
+            FrequenciaCelula.membro_nucleo_id.in_(mn_ids),
+            FrequenciaCelula.presente == True
+        )
+        
+        if year and month:
+            from sqlalchemy import extract
+            celula_query = celula_query.filter(
+                extract('year', FrequenciaCelula.data) == year,
+                extract('month', FrequenciaCelula.data) == month
+            )
+            
+        frequencias_celula = celula_query.all()
+
+    res_lideranca = []
+    for f in frequencias_lideranca:
+        d = f.to_dict()
+        if f.aula:
+            d['titulo'] = f.aula.titulo
+            d['data'] = f.aula.data_hora.isoformat() + 'Z' if f.aula.data_hora else None
+        res_lideranca.append(d)
+
+    res_celula = []
+    for f in frequencias_celula:
+        d = f.to_dict()
+        if f.celula:
+            d['titulo'] = f.celula.nome
+        res_celula.append(d)
+
+    return jsonify({
+        'lideranca': res_lideranca,
+        'celula': res_celula
+    })
+
 @api.route('/membros/<int:id>', methods=['GET'])
 @jwt_required()
 def get_membro(id):
