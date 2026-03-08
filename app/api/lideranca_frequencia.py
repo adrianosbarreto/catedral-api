@@ -78,10 +78,10 @@ def create_aula_lideranca():
 
     data = request.json
     try:
-        data_hora = datetime.fromisoformat(data['data_hora'].replace('Z', ''))
+        data_hora = datetime.fromisoformat(data['data_hora'].replace('Z', '+00:00'))
         data_hora_fim = None
         if data.get('data_hora_fim'):
-            data_hora_fim = datetime.fromisoformat(data['data_hora_fim'].replace('Z', ''))
+            data_hora_fim = datetime.fromisoformat(data['data_hora_fim'].replace('Z', '+00:00'))
         
         # Automação de IDE: Se for pastor/supervisor e o tipo for IDE, usa a IDE dele
         # apenas Admin pode setar IDE de outros explicitamente
@@ -188,7 +188,7 @@ def save_frequencia_manual():
     if frequencia:
         frequencia.presente = presente
         frequencia.metodo = 'manual'
-        frequencia.data_registro = datetime.now()
+        frequencia.data_registro = datetime.utcnow()
     else:
         frequencia = FrequenciaAulaLideranca(
             aula_id=aula_id,
@@ -234,7 +234,7 @@ def checkin_lideranca():
         return jsonify({'error': 'Aula não encontrada ou inativa'}), 404
 
     # 1. Validar Janela de Horário
-    agora = datetime.now()
+    agora = datetime.utcnow()
     # Início: 1 hora antes do marcado
     inicio_valido = aula.data_hora - timedelta(hours=1)
     
@@ -265,7 +265,7 @@ def checkin_lideranca():
     if frequencia:
         frequencia.presente = True
         frequencia.metodo = 'checkin'
-        frequencia.data_registro = datetime.now()
+        frequencia.data_registro = datetime.utcnow()
     else:
         frequencia = FrequenciaAulaLideranca(
             aula_id=aula_id,
@@ -306,3 +306,65 @@ def get_frequencias_aula(aula_id):
         'pages': pagination.pages,
         'current_page': page
     })
+
+@api.route('/lideranca/aulas/<int:id>', methods=['PUT'])
+@jwt_required()
+def update_aula_lideranca(id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role not in ['admin', 'pastor', 'pastor_de_rede']:
+        return jsonify({'error': 'Sem permissão'}), 403
+
+    aula = AulaLideranca.query.get(id)
+    if not aula:
+        return jsonify({'error': 'Aula não encontrada'}), 404
+
+    data = request.json
+    try:
+        if 'titulo' in data:
+            aula.titulo = data['titulo']
+        if 'descricao' in data:
+            aula.descricao = data['descricao']
+        if 'local_nome' in data:
+            aula.local_nome = data['local_nome']
+        if 'raio_checkin' in data:
+            aula.raio_checkin = data['raio_checkin']
+        if 'data_hora' in data:
+            aula.data_hora = datetime.fromisoformat(data['data_hora'].replace('Z', '+00:00'))
+        if 'data_hora_fim' in data:
+            if data['data_hora_fim']:
+                aula.data_hora_fim = datetime.fromisoformat(data['data_hora_fim'].replace('Z', '+00:00'))
+            else:
+                aula.data_hora_fim = None
+        if 'latitude' in data:
+            aula.latitude = data['latitude']
+        if 'longitude' in data:
+            aula.longitude = data['longitude']
+
+        db.session.commit()
+        return jsonify(aula.to_dict())
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
+
+@api.route('/lideranca/aulas/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_aula_lideranca(id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user.role not in ['admin', 'pastor', 'pastor_de_rede']:
+        return jsonify({'error': 'Sem permissão'}), 403
+
+    aula = AulaLideranca.query.get(id)
+    if not aula:
+        return jsonify({'error': 'Aula não encontrada'}), 404
+
+    try:
+        FrequenciaAulaLideranca.query.filter_by(aula_id=id).delete()
+        db.session.delete(aula)
+        db.session.commit()
+        return jsonify({'message': 'Aula excluída com sucesso'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 400
+
