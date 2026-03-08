@@ -81,19 +81,16 @@ def upload_evento_banner():
         return jsonify({'error': 'No selected file'}), 400
     
     if file:
-        filename = secure_filename(file.filename)
-        # Adicionar timestamp para evitar conflitos de nomes
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"{timestamp}_{filename}"
-        
-        upload_path = os.path.join('app', 'static', 'uploads', 'eventos')
-        if not os.path.exists(upload_path):
-            os.makedirs(upload_path)
+        import base64
+        import mimetypes
+        file_content = file.read()
+        mime_type, _ = mimetypes.guess_type(file.filename)
+        if not mime_type:
+            mime_type = 'image/jpeg'
             
-        file.save(os.path.join(upload_path, filename))
+        encoded = base64.b64encode(file_content).decode('utf-8')
+        file_url = f"data:{mime_type};base64,{encoded}"
         
-        # Retorna o caminho que pode ser acessado via /static/uploads/eventos/filename
-        file_url = f"/static/uploads/eventos/{filename}"
         return jsonify({'url': file_url}), 200
 
 @api.route('/eventos', methods=['POST'])

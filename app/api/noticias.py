@@ -147,19 +147,16 @@ def upload_foto_noticia():
         return jsonify({'error': 'No selected file'}), 400
         
     if file:
-        filename = secure_filename(file.filename)
-        # Unique filename
-        ext = os.path.splitext(filename)[1]
-        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        import base64
+        import mimetypes
+        file_content = file.read()
+        mime_type, _ = mimetypes.guess_type(file.filename)
+        if not mime_type:
+            mime_type = 'image/jpeg'
+            
+        encoded = base64.b64encode(file_content).decode('utf-8')
+        file_url = f"data:{mime_type};base64,{encoded}"
         
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        file.save(file_path)
-        
-        # Determine base URL for static files
-        # In this setup, we'll assume /app/static/uploads is served as /static/uploads
-        # Or even better, just return the relative path and let frontend handle it
-        url = f"/static/uploads/{unique_filename}"
-        
-        return jsonify({'url': url})
+        return jsonify({'url': file_url})
     
     return jsonify({'error': 'Unknown error'}), 400
