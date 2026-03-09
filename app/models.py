@@ -312,8 +312,7 @@ class Evento(db.Model):
     local = db.Column(db.String(100), nullable=False)
     tipo_evento = db.Column(db.String(50), nullable=False)
     capacidade_maxima = db.Column(db.Integer)
-    imagem_banner = db.Column(db.Text, nullable=True) # Alterado para Text para suportar base64
-
+    imagem_banner = db.Column(db.String(500), nullable=True)
     criado_por_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True) # should be nullable for existing
     cta_texto = db.Column(db.String(50), nullable=True)
     cta_link = db.Column(db.String(500), nullable=True)
@@ -366,24 +365,6 @@ class Evento(db.Model):
             'passou': self.data_fim < datetime.utcnow() if self.data_fim else False
         }
 
-    def to_public_dict(self):
-        """Versão segura e limitada para exibição pública no site/app sem login."""
-        return {
-            'id': self.id,
-            'titulo': self.titulo,
-            'descricao': self.descricao,
-            'data_inicio': self.data_inicio.isoformat() + 'Z' if self.data_inicio else None,
-            'data_fim': self.data_fim.isoformat() + 'Z' if self.data_fim else None,
-            'local': self.local,
-            'tipo_evento': self.tipo_evento,
-            'imagem_banner': self.imagem_banner,
-            'cta_texto': self.cta_texto,
-            'cta_link': self.cta_link,
-            'gerenciar_participantes': self.gerenciar_participantes,
-            'valor_inscricao': self.valor_inscricao,
-            'is_batismo': getattr(self, 'is_batismo', False)
-        }
-
 class InscricaoEvento(db.Model):
     __tablename__ = 'inscricoes_eventos'
     id = db.Column(db.Integer, primary_key=True)
@@ -399,7 +380,6 @@ class InscricaoEvento(db.Model):
     respostas = db.Column(db.JSON, default=dict)
     
     evento = db.relationship('Evento', backref=db.backref('inscricoes', cascade='all, delete-orphan'))
-
     membro = db.relationship('Membro', backref=db.backref('eventos_inscritos', cascade='all, delete-orphan'))
 
     def to_dict(self):
@@ -416,43 +396,6 @@ class InscricaoEvento(db.Model):
             'respostas': self.respostas or {},
             'data_inscricao': self.data_inscricao.isoformat() + 'Z' if self.data_inscricao else None
         }
-
-class Projeto(db.Model):
-    __tablename__ = 'projetos'
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(150), nullable=False)
-    subtitulo = db.Column(db.String(250))
-    slug = db.Column(db.String(150), unique=True, nullable=False)
-    descricao_home = db.Column(db.Text)
-    imagem_capa = db.Column(db.Text) # Alterado para Text para suportar base64
-
-    ativo = db.Column(db.Boolean, default=True)
-    destaque = db.Column(db.Boolean, default=False)
-    ordem = db.Column(db.Integer, default=0)
-    # paginas: [{ "titulo": "...", "conteudo": "...", "imagem": "..." }]
-    paginas = db.Column(db.JSON, default=list)
-    custom_css = db.Column(db.Text) # CSS personalizado para o projeto
-
-    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'titulo': self.titulo,
-            'subtitulo': self.subtitulo,
-            'slug': self.slug,
-            'descricao_home': self.descricao_home,
-            'imagem_capa': self.imagem_capa,
-            'ativo': self.ativo,
-            'destaque': self.destaque,
-            'ordem': self.ordem,
-            'paginas': self.paginas or [],
-            'custom_css': self.custom_css,
-            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
-
-        }
-
-
 
 class AulaLideranca(db.Model):
     __tablename__ = 'aulas_lideranca'

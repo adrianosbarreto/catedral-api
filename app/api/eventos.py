@@ -29,8 +29,9 @@ def get_eventos():
         query = query.filter(Evento.data_fim >= agora)
     
     # Filtro de Visibilidade (IDE vs Igreja)
-    # Admin e Pastor (geral) vêem tudo. Pastor de Rede e abaixo vêem apenas da sua IDE ou Igreja.
-    if user.role not in ['admin', 'pastor']:
+    # Admin e Pastor (geral/rede) vêem tudo. Supervisores e abaixo vêem apenas da sua IDE ou Igreja.
+    if user.role not in ['admin', 'pastor', 'pastor_de_rede']:
+
         from sqlalchemy import or_
         # Regra: Se não tem IDEs associadas, é da Igreja (todos veem). 
         # Se tem IDEs, só vê quem pertence a uma delas.
@@ -54,34 +55,13 @@ def get_eventos():
     eventos = query.order_by(Evento.data_inicio).all()
     return jsonify([evento.to_dict() for evento in eventos])
 
-# Rate limiting simples em memória para o endpoint público
-from collections import defaultdict
-import time
-_rate_limit_storage = defaultdict(list)
-
 @api.route('/public/eventos', methods=['GET'])
 def get_eventos_publico():
-    # Rate limiting: Max 30 requisições por minuto por IP
-    ip = request.remote_addr
-    now = time.time()
-    # Limpar registros antigos para este IP
-    _rate_limit_storage[ip] = [t for t in _rate_limit_storage[ip] if now - t < 60]
-    
-    if len(_rate_limit_storage[ip]) >= 30:
-        return jsonify({'error': 'Muitas requisições. Tente novamente em um minuto.'}), 429
-    
-    _rate_limit_storage[ip].append(now)
-
     agora = datetime.utcnow()
-    # Retorna apenas eventos ativos, que não finalizaram e com visibilidade pública
-    query = Evento.query.filter(
-        Evento.ativo == True, 
-        Evento.data_fim >= agora,
-        Evento.tipo_visibilidade == 'publico'
-    )
+    # Retorna apenas eventos ativos e que não finalizaram
+    query = Evento.query.filter(Evento.ativo == True, Evento.data_fim >= agora)
     eventos = query.order_by(Evento.data_inicio).all()
-    # Usa to_public_dict para segurança de dados
-    return jsonify([evento.to_public_dict() for evento in eventos])
+    return jsonify([evento.to_dict() for evento in eventos])
 
 @api.route('/eventos/<int:id>', methods=['GET'])
 @jwt_required()
@@ -118,7 +98,12 @@ def upload_evento_banner():
 @jwt_required()
 def create_evento():
     current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    if not user or user.role not in ['admin', 'pastor', 'pastor_de_rede']:
+        return jsonify({'error': 'Você não tem permissão para criar eventos.'}), 403
+
     data = request.get_json() or {}
+
     
     # Basic validation
     required = ['titulo', 'data_inicio', 'data_fim', 'local', 'tipo_evento']
@@ -209,9 +194,6 @@ def update_evento(id):
         if 'imagem_banner' in data: evento.imagem_banner = data['imagem_banner']
         if 'cta_texto' in data: evento.cta_texto = data['cta_texto']
         if 'cta_link' in data: evento.cta_link = data['cta_link']
-        if 'tipo_visibilidade' in data: evento.tipo_visibilidade = data['tipo_visibilidade']
-        if 'config_mensagem_antecedencia' in data: 
-            evento.config_mensagem_antecedencia = int(data['config_mensagem_antecedencia'])
         # Múltiplas IDEs
         if 'ides' in data and isinstance(data['ides'], list):
             from app.models import Ide

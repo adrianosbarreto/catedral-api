@@ -2,5 +2,4 @@ from flask import Blueprint
 
 api = Blueprint('api', __name__)
 
-from . import membros, eventos, celulas, ides, nucleos, frequencias, solicitacoes, noticias, notificacoes, inscricoes, lideranca_frequencia, projetos
-
+from . import membros, eventos, celulas, ides, nucleos, frequencias, solicitacoes, noticias, notificacoes, inscricoes, lideranca_frequencia
