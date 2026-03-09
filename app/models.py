@@ -431,6 +431,7 @@ class Projeto(db.Model):
     ordem = db.Column(db.Integer, default=0)
     # paginas: [{ "titulo": "...", "conteudo": "...", "imagem": "..." }]
     paginas = db.Column(db.JSON, default=list)
+    galeria = db.Column(db.JSON, default=list) # Banco de imagens do projeto
     custom_css = db.Column(db.Text) # CSS personalizado para o projeto
 
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
@@ -447,6 +448,7 @@ class Projeto(db.Model):
             'destaque': self.destaque,
             'ordem': self.ordem,
             'paginas': self.paginas or [],
+            'galeria': self.galeria or [],
             'custom_css': self.custom_css,
             'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
 

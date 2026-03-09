@@ -65,6 +65,7 @@ def admin_create_projeto():
         destaque=data.get('destaque', False),
         ordem=data.get('ordem', 0),
         paginas=data.get('paginas', []),
+        galeria=data.get('galeria', []),
         custom_css=data.get('custom_css')
     )
 
@@ -97,6 +98,7 @@ def admin_update_projeto(id):
     projeto.destaque = data.get('destaque', projeto.destaque)
     projeto.ordem = data.get('ordem', projeto.ordem)
     projeto.paginas = data.get('paginas', projeto.paginas)
+    projeto.galeria = data.get('galeria', projeto.galeria)
     projeto.custom_css = data.get('custom_css', projeto.custom_css)
 
     
