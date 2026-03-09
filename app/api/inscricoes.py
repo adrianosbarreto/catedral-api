@@ -226,9 +226,8 @@ def update_status_inscricao(id):
         return jsonify({'error': 'Inscrição não encontrada'}), 404
         
     evento = inscricao.evento
-    # Permissão: Criador do evento ou Admin ou Pastor (geral/rede)
-    if user.role not in ['admin', 'pastor', 'pastor_de_rede'] and evento.criado_por_id != current_user_id:
-
+    # Permissão: Criador do evento ou Admin ou Pastor
+    if user.role not in ['admin', 'pastor'] and evento.criado_por_id != current_user_id:
         return jsonify({'error': 'Sem permissão para alterar inscrição'}), 403
         
     data = request.get_json() or {}
