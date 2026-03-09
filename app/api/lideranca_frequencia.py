@@ -283,6 +283,10 @@ def checkin_lideranca():
 @api.route('/lideranca/aulas/<int:aula_id>/frequencias', methods=['GET'])
 @jwt_required()
 def get_frequencias_aula(aula_id):
+    from app.scopes import MembroScope
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 50, type=int)
     nome = request.args.get('nome', '')
@@ -290,15 +294,20 @@ def get_frequencias_aula(aula_id):
 
     query = FrequenciaAulaLideranca.query.filter_by(aula_id=aula_id)
 
-    if nome or ide_id:
+    # Aplicar Escopo de Hierarquia
+    if user:
+        # Precisamos de um Join com Membro para que o Scope possa filtrar
         query = query.join(Membro)
+        query = MembroScope.apply(query, user)
+
+    if nome or ide_id:
         if nome:
             query = query.filter(Membro.nome.ilike(f'%{nome}%'))
         if ide_id:
             query = query.filter(Membro.ide_id == ide_id)
     else:
-        # Ordenação padrão por nome do membro se não houver filtro (precisa do join)
-        query = query.join(Membro).order_by(Membro.nome)
+        # Ordenação padrão por nome do membro se não houver filtro
+        query = query.order_by(Membro.nome)
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
