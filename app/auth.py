@@ -65,8 +65,8 @@ def generate_invite():
         return jsonify({'error': 'IDE_ID é obrigatório'}), 400
 
     now = datetime.utcnow()
-    # Convites de membro duram 5 dias; demais continuam 1 dia
-    days = 5 if papel_destino in ('membro', 'membro_de_nucleo') else 1
+    # Todos os convites agora duram 5 dias
+    days = 5
     data_expiracao = (now + timedelta(days=days)).replace(hour=23, minute=59, second=59, microsecond=999999)
 
     token = secrets.token_urlsafe(16)
