@@ -12,14 +12,18 @@ class Convite(db.Model):
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     data_expiracao = db.Column(db.DateTime, nullable=False)
     papel_destino = db.Column(db.String(50), nullable=True) # Papel que o convidado terá
+    pastor_destino_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True) # Pastor selecionado
     supervisor_destino_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True) # Supervisor imediato
+    lider_destino_id = db.Column(db.Integer, db.ForeignKey('membros.id'), nullable=True) # Líder imediato (se sem célula)
     celula_id = db.Column(db.Integer, db.ForeignKey('celulas.id'), nullable=True) # Célula de destino
     nucleo_id = db.Column(db.Integer, db.ForeignKey('nucleos.id'), nullable=True)  # Núcleo de destino
     usado = db.Column(db.Boolean, default=False)
 
     ide = db.relationship('Ide', backref='convites')
     criador = db.relationship('User', backref='convites_criados')
+    pastor_destino = db.relationship('Membro', foreign_keys=[pastor_destino_id])
     supervisor_destino = db.relationship('Membro', foreign_keys=[supervisor_destino_id])
+    lider_destino = db.relationship('Membro', foreign_keys=[lider_destino_id])
     celula = db.relationship('Celula', foreign_keys=[celula_id])
     nucleo_destino = db.relationship('Nucleo', foreign_keys=[nucleo_id])
 
@@ -65,7 +69,9 @@ class Convite(db.Model):
                 'data_criacao': self.data_criacao.isoformat() + 'Z' if self.data_criacao else None,
                 'data_expiracao': self.data_expiracao.isoformat() + 'Z' if self.data_expiracao else None,
                 'papel_destino': getattr(self, 'papel_destino', None),
+                'pastor_destino_id': getattr(self, 'pastor_destino_id', None),
                 'supervisor_destino_id': getattr(self, 'supervisor_destino_id', None),
+                'lider_destino_id': getattr(self, 'lider_destino_id', None),
                 'supervisor_destino_nome': supervisor_nome,
                 'criado_por_nome': criador_nome,
                 'criado_por_papel': criador_role,

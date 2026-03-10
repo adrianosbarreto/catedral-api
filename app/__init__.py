@@ -101,8 +101,9 @@ def create_app(config_name='default'):
     oauth.init_app(app)
 
     # Initialize APScheduler
-    scheduler.init_app(app)
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.init_app(app)
+        scheduler.start()
 
     from app import models
     

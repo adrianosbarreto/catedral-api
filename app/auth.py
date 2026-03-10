@@ -33,15 +33,17 @@ def generate_invite():
     data = request.get_json()
     ide_id = data.get('ide_id')
     papel_destino = data.get('papel_destino')
+    pastor_id = data.get('pastor_id')  # Novo: pastor selecionado
     supervisor_id = data.get('supervisor_id')
-    celula_id = data.get('celula_id')  # Novo: célula de destino
-    nucleo_id = data.get('nucleo_id')  # Novo: núcleo de destino
+    lider_id = data.get('lider_id')  # Novo: líder selecionado
+    celula_id = data.get('celula_id')
+    nucleo_id = data.get('nucleo_id')
 
     # Validação de Hierarquia
     hierarchy = {
         'admin': ['pastor_de_rede', 'supervisor', 'lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo'],
         'pastor_de_rede': ['supervisor', 'lider_de_celula', 'membro', 'membro_de_nucleo'],
-        'pastor': ['supervisor', 'lider_de_celula', 'membro', 'membro_de_nucleo'],
+        'pastor': ['pastor_de_rede', 'supervisor', 'lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo'],
         'supervisor': ['lider_de_celula', 'membro', 'membro_de_nucleo'],
         'lider_de_celula': ['vice_lider_de_celula', 'membro', 'membro_de_nucleo'],
     }
@@ -54,15 +56,64 @@ def generate_invite():
         return jsonify({'error': f'Você não tem permissão para convidar um {papel_destino}'}), 403
 
     if not ide_id:
-        if user.membro and user.membro.ide_id:
-            ide_id = user.membro.ide_id
-        elif user.role == 'admin':
-            first_ide = Ide.query.first()
-            if first_ide:
-                ide_id = first_ide.id
-    
-    if not ide_id:
         return jsonify({'error': 'IDE_ID é obrigatório'}), 400
+
+    # --- NOVO: VALIDAÇÃO DE OBRIGATORIEDADE DE HIERARQUIA ---
+    # Se NÃO vier a célula, o backend exige os IDs intermediários dependendo de quem convida
+    if not celula_id:
+        if user_role in ['admin', 'pastor']:
+            # Admin/Pastor criando Supervisor ou abaixo -> Precisa de Pastor de Rede
+            if papel_destino in ['supervisor', 'lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo']:
+                if not pastor_id:
+                    return jsonify({'error': 'A definição do Pastor de Rede é obrigatória para este convite'}), 400
+            # Admin/Pastor criando Líder ou abaixo -> Precisa de Supervisor
+            if papel_destino in ['lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo']:
+                if not supervisor_id:
+                    return jsonify({'error': 'A definição do Supervisor é obrigatória para este convite'}), 400
+            # Admin/Pastor criando Membro -> Precisa de Líder
+            if papel_destino in ['membro', 'membro_de_nucleo']:
+                if not lider_id:
+                    return jsonify({'error': 'A definição do Líder é obrigatória para este convite'}), 400
+                    
+        elif user_role == 'pastor_de_rede':
+            # Pastor de Rede criando Líder ou abaixo -> Precisa de Supervisor
+            if papel_destino in ['lider_de_celula', 'vice_lider_de_celula', 'membro', 'membro_de_nucleo']:
+                if not supervisor_id:
+                    return jsonify({'error': 'Para criar este convite, você precisa definir o Supervisor'}), 400
+            # Pastor de Rede criando Membro -> Precisa de Líder
+            if papel_destino in ['membro', 'membro_de_nucleo']:
+                if not lider_id:
+                    return jsonify({'error': 'Para criar este convite, você precisa definir o Líder'}), 400
+
+        elif user_role == 'supervisor':
+            # Supervisor criando Membro -> Precisa de Líder
+            if papel_destino in ['membro', 'membro_de_nucleo']:
+                if not lider_id:
+                    return jsonify({'error': 'Para criar este convite, você precisa definir o Líder'}), 400
+    # --- LÓGICA DE AUTO-PREENCHIMENTO DE HIERARQUIA ---
+    # Tenta preencher o que falta a partir da célula ou do criador
+    from app.models import Celula, Membro
+    celula = Celula.query.get(celula_id) if celula_id else None
+    criador_membro = user.membro # User tem relacionamento 'membro'
+
+    # Se tem célula, ela é a fonte prioritária para o que estiver faltando
+    if celula:
+        if not lider_id: lider_id = celula.lider_id
+        if not supervisor_id: supervisor_id = celula.supervisor_id
+        if not pastor_id and celula.ide: pastor_id = celula.ide.pastor_id
+
+    # Se ainda faltar, herda do criador dependendo do papel dele
+    if criador_membro:
+        if user_role == 'supervisor':
+            if not supervisor_id: supervisor_id = criador_membro.id
+            if not pastor_id: pastor_id = criador_membro.pastor_id
+        elif user_role == 'pastor_de_rede':
+            if not pastor_id: pastor_id = criador_membro.id
+        elif user_role == 'lider_de_celula':
+            if not lider_id: lider_id = criador_membro.id
+            if not supervisor_id: supervisor_id = criador_membro.supervisor_id
+            if not pastor_id: pastor_id = criador_membro.pastor_id
+    # ----------------------------------------------------
 
     now = datetime.utcnow()
     # Todos os convites agora duram 5 dias
@@ -77,7 +128,9 @@ def generate_invite():
         criado_por_id=user.id,
         data_expiracao=data_expiracao,
         papel_destino=papel_destino,
+        pastor_destino_id=pastor_id,
         supervisor_destino_id=supervisor_id,
+        lider_destino_id=lider_id,
         celula_id=celula_id,
         nucleo_id=nucleo_id
     )
@@ -140,24 +193,30 @@ def register():
             except ValueError:
                 return None
 
-        # Montar dados de hierarquia a partir do convite
+        # Montar dados de hierarquia a partir do convite (já preenchido no generate_invite)
         lider_id = None
         supervisor_id_destino = None
         pastor_id_destino = None
 
         if invite:
-            # lider_id = quem criou o convite (normalmente o líder da célula)
-            lider_id = invite.criador.membro_id if invite.criador else None
-
-            # Se tem célula no convite, usa os dados da célula para preencher a hierarquia
-            if invite.celula:
+            # Prioridade total para o que foi salvo no convite no momento da criação
+            pastor_id_destino = invite.pastor_destino_id
+            supervisor_id_destino = invite.supervisor_destino_id
+            lider_id = invite.lider_destino_id
+            
+            # Se for via célula mas por algum motivo os IDs acima sumiram, herda da célula
+            if invite.celula and not (pastor_id_destino or supervisor_id_destino or lider_id):
                 lider_id = invite.celula.lider_id
                 supervisor_id_destino = invite.celula.supervisor_id
-                # pastor vem da IDE da célula
                 if invite.celula.ide:
                     pastor_id_destino = invite.celula.ide.pastor_id
-            elif invite.supervisor_destino_id:
-                lider_id = invite.supervisor_destino_id
+            
+            # --- FALLBACK FINAL PARA PASTOR DA IDE ---
+            if not pastor_id_destino and invite.ide_id:
+                from app.models import Ide
+                ide = db.session.get(Ide, invite.ide_id)
+                if ide and ide.pastor_id:
+                    pastor_id_destino = ide.pastor_id
 
         membro = Membro(
             nome=data['nome'],
@@ -179,7 +238,9 @@ def register():
         db.session.flush()
 
         # 2. Adicionar Papel
-        papel_obj = PapelMembro(membro_id=membro.id, papel=papel)
+        from app.models import Role
+        role_obj = Role.query.filter_by(name=papel).first()
+        papel_obj = PapelMembro(membro_id=membro.id, papel=papel, role_id=role_obj.id if role_obj else None)
         db.session.add(papel_obj)
 
         # 3. Adicionar Endereço
