@@ -32,72 +32,87 @@ class Convite(db.Model):
         return agora < self.data_expiracao
 
     def to_dict(self):
+        print(f"\n[DEBUG] Convite.to_dict executando em: {__file__} (ID: {self.id})")
         try:
-            # Pegar dados básicos com segurança
-            token = getattr(self, 'token', None)
-            ide_id = getattr(self, 'ide_id', None)
+            from app.models import Membro
             
-            # Tentar pegar IDE
-            ide = getattr(self, 'ide', None)
-            ide_nome = getattr(ide, 'nome', None) if ide else None
+            # Pegar dados da IDE e Pastor da IDE para fallback
+            ide = self.ide
+            ide_nome = ide.nome if ide else None
+            ide_pastor_nome = ide.pastor.nome if (ide and ide.pastor) else None
             
-            # Tentar pegar Supervisor
-            supervisor = getattr(self, 'supervisor_destino', None)
-            supervisor_nome = getattr(supervisor, 'nome', None) if supervisor else None
+            # Hierarquia Destino - Nomes Reais
+            # Pastor
+            pastor_dest = self.pastor_destino
+            if not pastor_dest and self.pastor_destino_id:
+                pastor_dest = db.session.get(Membro, self.pastor_destino_id)
+            pastor_nome = pastor_dest.nome if pastor_dest else ide_pastor_nome
             
-            # Tentar pegar Criador
-            criador = getattr(self, 'criador', None)
-            criador_membro = getattr(criador, 'membro', None) if criador else None
-            criador_nome = getattr(criador_membro, 'nome', None) if criador_membro else getattr(criador, 'username', 'N/A')
-            criador_role = getattr(criador, 'role', 'membro')
+            # Supervisor
+            supervisor_dest = self.supervisor_destino
+            if not supervisor_dest and self.supervisor_destino_id:
+                supervisor_dest = db.session.get(Membro, self.supervisor_destino_id)
+            supervisor_nome = supervisor_dest.nome if supervisor_dest else None
             
-            # Pegar lider_id do criador (membro que gerou o convite)
-            criador_membro_id = getattr(criador_membro, 'id', None) if criador_membro else None
+            # Líder
+            lider_dest = self.lider_destino
+            if not lider_dest and self.lider_destino_id:
+                lider_dest = db.session.get(Membro, self.lider_destino_id)
+            lider_nome = lider_dest.nome if lider_dest else None
             
-            # Pegar dados da célula
-            celula = getattr(self, 'celula', None)
-            celula_nome = getattr(celula, 'nome', None) if celula else None
-            celula_supervisor_id = getattr(celula, 'supervisor_id', None) if celula else None
-            celula_lider_id = getattr(celula, 'lider_id', None) if celula else None
-            celula_pastor_id = getattr(celula, 'pastor_id', None) if celula else None
+            # Criador
+            criador = self.criador
+            criador_nome = criador.membro.nome if (criador and criador.membro) else getattr(criador, 'username', 'N/A')
+            
+            # Fallback de Líder: Se não houver líder_destino, o criador costuma ser o líder (exceto se for admin)
+            if not lider_nome and (not criador or criador.role != 'admin'):
+                lider_nome = criador_nome
+
+            # Dados da célula
+            celula = self.celula
+            celula_nome = celula.nome if celula else None
 
             data = {
                 'id': self.id,
-                'token': token,
-                'ide_id': ide_id,
+                'token': self.token,
+                'ide_id': self.ide_id,
                 'ide_nome': ide_nome,
+                'pastor_nome': pastor_nome,
+                'supervisor_nome': supervisor_nome,
+                'supervisor_destino_nome': supervisor_nome, # Alias para compatibilidade legado
+                'lider_nome': lider_nome,
+                'lider_destino_nome': lider_nome, # Alias extra para segurança
                 'data_criacao': self.data_criacao.isoformat() + 'Z' if self.data_criacao else None,
                 'data_expiracao': self.data_expiracao.isoformat() + 'Z' if self.data_expiracao else None,
-                'papel_destino': getattr(self, 'papel_destino', None),
-                'pastor_destino_id': getattr(self, 'pastor_destino_id', None),
-                'supervisor_destino_id': getattr(self, 'supervisor_destino_id', None),
-                'lider_destino_id': getattr(self, 'lider_destino_id', None),
-                'supervisor_destino_nome': supervisor_nome,
+                'papel_destino': self.papel_destino,
+                'pastor_destino_id': self.pastor_destino_id,
+                'supervisor_destino_id': self.supervisor_destino_id,
+                'lider_destino_id': self.lider_destino_id,
                 'criado_por_nome': criador_nome,
-                'criado_por_papel': criador_role,
-                'criado_por_membro_id': criador_membro_id,
-                'celula_id': getattr(self, 'celula_id', None),
+                'celula_id': self.celula_id,
                 'celula_nome': celula_nome,
-                'celula_supervisor_id': celula_supervisor_id,
-                'celula_lider_id': celula_lider_id,
-                'celula_pastor_id': celula_pastor_id,
-                'nucleo_id': getattr(self, 'nucleo_id', None),
+                'nucleo_id': self.nucleo_id,
                 'valido': self.esta_valido()
             }
             
-            # Tentar pegar Pastor da Unidade (IDE)
-            try:
-                pastor = getattr(ide, 'pastor', None) if ide else None
-                data['ide_pastor_nome'] = getattr(pastor, 'nome', None) if pastor else None
-            except Exception:
-                data['ide_pastor_nome'] = None
+            # Mapeamento de Cargo amigável
+            papeis_map = {
+                'pastor_de_rede': 'Pastor de Rede',
+                'supervisor': 'Supervisor',
+                'lider_de_celula': 'Líder de Célula',
+                'vice_lider_de_celula': 'Vice-Líder',
+                'membro': 'Membro',
+                'membro_de_nucleo': 'Membro de Núcleo'
+            }
+            data['role_nome'] = papeis_map.get(data['papel_destino'], data['papel_destino'] or 'Membro')
                 
+            print(f"[DEBUG] Dictionary data keys: {list(data.keys())}")
             return data
         except Exception as e:
-            print(f"ERROR: Exception in Convite.to_dict: {e}")
+            print(f"ERROR in Convite.to_dict (ID {self.id}): {e}")
             return {
                 'id': getattr(self, 'id', None),
-                'error': 'Falha interna ao carregar convite'
+                'error': f'Erro ao processar convite: {str(e)}'
             }
 
 

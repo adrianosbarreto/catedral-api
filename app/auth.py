@@ -244,14 +244,16 @@ def register():
         db.session.add(papel_obj)
 
         # 3. Adicionar Endereço
+        end_data = data.get('endereco', data)
         endereco = Endereco(
             membro_id=membro.id,
-            logradouro=data.get('logradouro'),
-            numero=data.get('numero'),
-            bairro=data.get('bairro'),
-            cidade=data.get('cidade'),
-            estado=data.get('estado'),
-            cep=data.get('cep')
+            logradouro=end_data.get('logradouro'),
+            numero=end_data.get('numero'),
+            complemento=end_data.get('complemento'),
+            bairro=end_data.get('bairro'),
+            cidade=end_data.get('cidade'),
+            estado=end_data.get('estado'),
+            cep=end_data.get('cep')
         )
         db.session.add(endereco)
 
