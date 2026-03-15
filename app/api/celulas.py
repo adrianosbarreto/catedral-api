@@ -42,6 +42,7 @@ def get_celulas():
     ide_id = request.args.get('ide_id', type=int)
     lider_id = request.args.get('lider_id', type=int)
     supervisor_id = request.args.get('supervisor_id', type=int)
+    all_records = request.args.get('all', 'false').lower() == 'true'
 
     from app.scopes import CellScope
     
@@ -56,6 +57,15 @@ def get_celulas():
         query = query.filter(Celula.lider_id == lider_id)
     if supervisor_id:
         query = query.filter(Celula.supervisor_id == supervisor_id)
+
+    if all_records:
+        celulas = query.all()
+        return jsonify({
+            'celulas': [c.to_dict() for c in celulas],
+            'total': len(celulas),
+            'pages': 1,
+            'current_page': 1
+        })
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
@@ -109,6 +119,59 @@ def get_nearby_cells_public():
             'lider_nome': cell.lider.nome if cell.lider else None,
             'distance': round(float(distance), 2)
         })
+
+    return jsonify(results)
+
+@api.route('/celulas/nearby', methods=['GET'])
+@jwt_required()
+def get_nearby_cells():
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Permissão básica: admin, pastor, pastor_de_rede, supervisor
+    if user.role not in ['admin', 'pastor', 'pastor_de_rede', 'supervisor']:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    lat = request.args.get('lat', type=float)
+    lng = request.args.get('lng', type=float)
+    radius = request.args.get('radius', 10.0, type=float) # Default 10km
+
+    if lat is None or lng is None:
+        return jsonify({'error': 'Latitude and Longitude are required'}), 400
+
+    from sqlalchemy import func
+    from app.scopes import CellScope
+    
+    distance_expr = func.acos(
+        func.cos(func.radians(lat)) * func.cos(func.radians(Celula.latitude)) * 
+        func.cos(func.radians(Celula.longitude) - func.radians(lng)) + 
+        func.sin(func.radians(lat)) * func.sin(func.radians(Celula.latitude))
+    ) * 6371
+
+    # Inicia a query base
+    query = db.session.query(Celula, distance_expr.label('distance')).filter(
+        Celula.ativo == True,
+        Celula.latitude.isnot(None),
+        Celula.longitude.isnot(None)
+    )
+
+    # Aplica o escopo do usuário (Filtra por IDE/Rede se for pastor de rede, etc)
+    # Ajuste: O CellScope.apply adiciona filtros à query. query.filter age no modelo principal da query.
+    query = CellScope.apply(query, user)
+
+    limit = 100 if user.role in ['admin', 'pastor'] else 20
+    nearby_cells_query = query.filter(distance_expr <= radius).order_by('distance').limit(limit)
+
+    results_raw = nearby_cells_query.all()
+
+    results = []
+    for cell, distance in results_raw:
+        cell_dict = cell.to_dict()
+        cell_dict['distance'] = round(float(distance), 2)
+        results.append(cell_dict)
 
     return jsonify(results)
 
