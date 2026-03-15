@@ -193,13 +193,33 @@ class Membro(db.Model):
     enderecos = db.relationship('Endereco', backref='membro', lazy='dynamic', cascade='all, delete-orphan')
     papeis = db.relationship('PapelMembro', backref='membro', lazy='dynamic', cascade='all, delete-orphan')
 
-    def to_dict(self):
-        return {
+    @staticmethod
+    def mask_cpf(cpf):
+        if not cpf or len(cpf) < 11: return cpf
+        return f"***.***.***-{cpf[-2:]}"
+
+    @staticmethod
+    def mask_phone(phone):
+        if not phone or len(phone) < 4: return phone
+        return f"(**) ****-{phone[-4:]}"
+
+    @staticmethod
+    def mask_email(email):
+        if not email or '@' not in email: return email
+        parts = email.split('@')
+        name = parts[0]
+        domain = parts[1]
+        if len(name) <= 2:
+            return f"*@{domain}"
+        return f"{name[0]}***{name[-1]}@{domain}"
+
+    def to_dict(self, include_sensitive=True):
+        data = {
             'id': self.id,
             'nome': self.nome,
-            'email': self.email,
-            'telefone': self.telefone,
-            'cpf': self.cpf,
+            'email': self.email if include_sensitive else self.mask_email(self.email),
+            'telefone': self.telefone if include_sensitive else self.mask_phone(self.telefone),
+            'cpf': self.cpf if include_sensitive else self.mask_cpf(self.cpf),
             'estado_civil': self.estado_civil,
             'data_batismo': self.data_batismo.isoformat() if self.data_batismo else None,
             'data_nascimento': self.data_nascimento.isoformat() if self.data_nascimento else None,
@@ -219,8 +239,10 @@ class Membro(db.Model):
             'tipo': self.tipo,
             'batizado': self.batizado,
             'celulas_lideradas': [{'id': c.id, 'nome': c.nome} for c in self.celulas_lideradas if c.ativo],
-            'celulas_supervisionadas': [{'id': c.id, 'nome': c.nome} for c in self.celulas_supervisionadas if c.ativo]
+            'celulas_supervisionadas': [{'id': c.id, 'nome': c.nome} for c in self.celulas_supervisionadas if c.ativo],
+            'is_masked': not include_sensitive
         }
+        return data
 
 
 class Ide(db.Model):
@@ -423,19 +445,20 @@ class InscricaoEvento(db.Model):
 
     membro = db.relationship('Membro', backref=db.backref('eventos_inscritos', cascade='all, delete-orphan'))
 
-    def to_dict(self):
+    def to_dict(self, include_sensitive=True):
         return {
             'id': self.id,
             'evento_id': self.evento_id,
             'membro_id': self.membro_id,
             'nome': self.membro.nome if self.membro else self.nome_externo,
-            'email': self.membro.email if self.membro else self.email_externo,
-            'telefone': self.membro.telefone if self.membro else self.telefone_externo,
-            'cpf': self.membro.cpf if self.membro else self.cpf_externo,
+            'email': (self.membro.email if self.membro else self.email_externo) if include_sensitive else Membro.mask_email(self.membro.email if self.membro else self.email_externo),
+            'telefone': (self.membro.telefone if self.membro else self.telefone_externo) if include_sensitive else Membro.mask_phone(self.membro.telefone if self.membro else self.telefone_externo),
+            'cpf': (self.membro.cpf if self.membro else self.cpf_externo) if include_sensitive else Membro.mask_cpf(self.membro.cpf if self.membro else self.cpf_externo),
             'status': self.status,
             'pago': self.pago,
             'respostas': self.respostas or {},
-            'data_inscricao': self.data_inscricao.isoformat() + 'Z' if self.data_inscricao else None
+            'data_inscricao': self.data_inscricao.isoformat() + 'Z' if self.data_inscricao else None,
+            'is_masked': not include_sensitive
         }
 
 class Projeto(db.Model):
@@ -623,15 +646,15 @@ class MembroNucleo(db.Model):
     nucleo = db.relationship('Nucleo', backref=db.backref('membros_nucleo', cascade='all, delete-orphan'))
     membro = db.relationship('Membro')
 
-    def to_dict(self):
+    def to_dict(self, include_sensitive=True):
         return {
             'id': self.id,
             'nucleo_id': self.nucleo_id,
             'membro_id': self.membro_id,
             'is_convidado': self.is_convidado,
             'nome_convidado': self.nome_convidado,
-            'telefone_convidado': self.telefone_convidado,
-            'membro': self.membro.to_dict() if self.membro else None
+            'telefone_convidado': self.telefone_convidado if include_sensitive else Membro.mask_phone(self.telefone_convidado),
+            'membro': self.membro.to_dict(include_sensitive=include_sensitive) if self.membro else None
         }
 
 class FrequenciaCelula(db.Model):

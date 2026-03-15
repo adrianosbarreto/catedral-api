@@ -71,8 +71,10 @@ def get_membros():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     membros = pagination.items
     
+    include_sensitive = (user and user.role == 'admin')
+    
     return jsonify({
-        'membros': [membro.to_dict() for membro in membros],
+        'membros': [membro.to_dict(include_sensitive=include_sensitive) for membro in membros],
         'total': pagination.total,
         'pages': pagination.pages,
         'current_page': page
@@ -241,14 +243,28 @@ def get_my_frequencias():
 @api.route('/membros/<int:id>', methods=['GET'])
 @jwt_required()
 def get_membro(id):
+    from flask_jwt_extended import get_jwt_identity
+    from app.models import User
+    
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    
     membro = db.session.get(Membro, id)
     if not membro:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify(membro.to_dict())
+        
+    include_sensitive = (user and user.role == 'admin')
+    return jsonify(membro.to_dict(include_sensitive=include_sensitive))
 
 @api.route('/membros/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_membro(id):
+    from flask_jwt_extended import get_jwt_identity
+    from app.models import User
+    
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    
     membro = db.session.get(Membro, id)
     if not membro:
         return jsonify({'error': 'Not found'}), 404
@@ -256,9 +272,24 @@ def update_membro(id):
     data = request.get_json() or {}
     
     if 'nome' in data: membro.nome = data['nome']
-    if 'email' in data: membro.email = data['email']
-    if 'telefone' in data: membro.telefone = data['telefone']
-    if 'cpf' in data: membro.cpf = data['cpf']
+    
+    # Ignorar campos mascarados (que contêm '*') se o usuário não for admin
+    # Isso evita que o dado real seja sobrescrito pela máscara enviada pelo frontend
+    if 'email' in data:
+        val = data['email']
+        if not val or '*' not in str(val):
+            membro.email = val
+            
+    if 'telefone' in data:
+        val = data['telefone']
+        if not val or '*' not in str(val):
+            membro.telefone = val
+            
+    if 'cpf' in data:
+        val = data['cpf']
+        if not val or '*' not in str(val):
+            membro.cpf = val
+            
     if 'estado_civil' in data: membro.estado_civil = data['estado_civil']
     if 'sexo' in data: membro.sexo = data['sexo']
     if 'ide_id' in data: membro.ide_id = parse_id(data['ide_id'])
@@ -301,7 +332,8 @@ def update_membro(id):
         papel_obj.papel = data['papel']
 
     db.session.commit()
-    return jsonify(membro.to_dict())
+    include_sensitive = (user and user.role == 'admin')
+    return jsonify(membro.to_dict(include_sensitive=include_sensitive))
 
 @api.route('/membros/<int:id>', methods=['DELETE'])
 @jwt_required()

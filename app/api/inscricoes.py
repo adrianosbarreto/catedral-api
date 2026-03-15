@@ -213,7 +213,8 @@ def get_participantes_evento(id):
         return jsonify({'error': 'Sem permissão para ver inscritos'}), 403
         
     participantes = InscricaoEvento.query.filter_by(evento_id=id).all()
-    return jsonify([p.to_dict() for p in participantes])
+    include_sensitive = (user and user.role == 'admin')
+    return jsonify([p.to_dict(include_sensitive=include_sensitive) for p in participantes])
 
 @api.route('/inscricoes/<int:id>', methods=['PUT'])
 @jwt_required()
