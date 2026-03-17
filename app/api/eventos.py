@@ -29,27 +29,35 @@ def get_eventos():
         query = query.filter(Evento.data_fim >= agora)
     
     # Filtro de Visibilidade (IDE vs Igreja)
-    # Admin e Pastor (geral) vêem tudo. Pastor de Rede e abaixo vêem apenas da sua IDE ou Igreja.
+    # Admin e Pastor (geral) vêem tudo.
     if user.role not in ['admin', 'pastor']:
         from sqlalchemy import or_
-        # Regra: Se não tem IDEs associadas, é da Igreja (todos veem). 
-        # Se tem IDEs, só vê quem pertence a uma delas.
-        # Também mantemos o ide_id legado para compatibilidade.
         user_ide_id = user.membro.ide_id if user.membro else None
         
-        if user_ide_id:
+        if user.role == 'pastor_de_rede':
+            # Pastor de Rede vê: Igreja + Criados por ele + Sua IDE
             query = query.filter(or_(
-                Evento.ide_id == None, # Legado
-                Evento.ide_id == user_ide_id, # Legado
-                ~Evento.ides.any(), # Sem IDEs (Igreja)
-                Evento.ides.any(id=user_ide_id) # Pertence à IDE do usuário
+                Evento.ide_id == None, # Legado Igreja
+                ~Evento.ides.any(), # Igreja
+                Evento.criado_por_id == current_user_id, # Criados por ele
+                Evento.ide_id == user_ide_id, # Sua IDE (Legado)
+                Evento.ides.any(id=user_ide_id) # Sua IDE
             ))
         else:
-            # Se o usuário não tem IDE, vê apenas os da Igreja
-            query = query.filter(or_(
-                Evento.ide_id == None,
-                ~Evento.ides.any()
-            ))
+            # Outros usuários (Supervisor, Lider, Membro) vêem apenas da sua IDE ou Igreja.
+            if user_ide_id:
+                query = query.filter(or_(
+                    Evento.ide_id == None, # Legado
+                    Evento.ide_id == user_ide_id, # Legado
+                    ~Evento.ides.any(), # Sem IDEs (Igreja)
+                    Evento.ides.any(id=user_ide_id) # Pertence à IDE do usuário
+                ))
+            else:
+                # Se o usuário não tem IDE, vê apenas os da Igreja
+                query = query.filter(or_(
+                    Evento.ide_id == None,
+                    ~Evento.ides.any()
+                ))
             
     eventos = query.order_by(Evento.data_inicio).all()
     return jsonify([evento.to_dict() for evento in eventos])
@@ -118,6 +126,12 @@ def upload_evento_banner():
 @jwt_required()
 def create_evento():
     current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    
+    # Apenas Admin, Pastor e Pastor de Rede podem criar eventos
+    if user.role not in ['admin', 'pastor', 'pastor_de_rede']:
+        return jsonify({'error': 'Você não tem permissão para criar eventos.'}), 403
+        
     data = request.get_json() or {}
     
     # Basic validation
@@ -185,14 +199,16 @@ def update_evento(id):
     if not evento:
         return jsonify({'error': 'Not found'}), 404
         
-    # Permissão: Admin e Pastor podem tudo. Outros apenas se forem o criador ou se for legado e tiverem cargo de gestão.
+    # Permissão: Apenas Admin, Criador ou Pastor da IDE podem alterar.
     is_owner = evento.criado_por_id == current_user_id
-    is_admin_or_pastor = user.role in ['admin', 'pastor', 'pastor_de_rede']
-    is_legacy = evento.criado_por_id is None
-    is_manager = user.role in ['supervisor']
+    is_admin = user.role == 'admin'
+    
+    user_ide_id = user.membro.ide_id if user.membro else None
+    is_pastor_of_ide = (user.role == 'pastor_de_rede' and user_ide_id is not None and 
+                        (evento.ide_id == user_ide_id or any(ide.id == user_ide_id for ide in evento.ides)))
 
-    if not (is_admin_or_pastor or is_owner or (is_legacy and is_manager)):
-        return jsonify({'error': 'Você não tem permissão para alterar este evento. Apenas o criador ou administradores podem editá-lo.'}), 403
+    if not (is_admin or is_owner or is_pastor_of_ide):
+        return jsonify({'error': 'Você não tem permissão para alterar este evento. Apenas o criador, pastores da rede ou administradores podem editá-lo.'}), 403
 
     data = request.get_json() or {}
     
@@ -252,12 +268,16 @@ def delete_evento(id):
     if not evento:
         return jsonify({'error': 'Not found'}), 404
         
-    # Permissão: Admin e Pastor podem tudo. Outros apenas se forem o criador.
+    # Permissão: Apenas Admin, Criador ou Pastor da IDE podem excluir.
     is_owner = evento.criado_por_id == current_user_id
-    is_admin_or_pastor = user.role in ['admin', 'pastor', 'pastor_de_rede']
+    is_admin = user.role == 'admin'
     
-    if not (is_admin_or_pastor or is_owner):
-        return jsonify({'error': 'Você não tem permissão para excluir este evento.'}), 403
+    user_ide_id = user.membro.ide_id if user.membro else None
+    is_pastor_of_ide = (user.role == 'pastor_de_rede' and user_ide_id is not None and 
+                        (evento.ide_id == user_ide_id or any(ide.id == user_ide_id for ide in evento.ides)))
+    
+    if not (is_admin or is_owner or is_pastor_of_ide):
+        return jsonify({'error': 'Você não tem permissão para excluir este evento. Apenas o criador, pastores da rede ou administradores podem excluí-lo.'}), 403
         
     db.session.delete(evento)
     db.session.commit()

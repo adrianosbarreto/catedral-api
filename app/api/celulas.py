@@ -58,10 +58,11 @@ def get_celulas():
     if supervisor_id:
         query = query.filter(Celula.supervisor_id == supervisor_id)
 
+    include_sensitive = (user and user.role == 'admin')
     if all_records:
         celulas = query.all()
         return jsonify({
-            'celulas': [c.to_dict() for c in celulas],
+            'celulas': [c.to_dict(include_sensitive=include_sensitive) for c in celulas],
             'total': len(celulas),
             'pages': 1,
             'current_page': 1
@@ -70,7 +71,7 @@ def get_celulas():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     
     return jsonify({
-        'celulas': [c.to_dict() for c in pagination.items],
+        'celulas': [c.to_dict(include_sensitive=include_sensitive) for c in pagination.items],
         'total': pagination.total,
         'pages': pagination.pages,
         'current_page': page
@@ -168,8 +169,9 @@ def get_nearby_cells():
     results_raw = nearby_cells_query.all()
 
     results = []
+    include_sensitive = (user and user.role == 'admin')
     for cell, distance in results_raw:
-        cell_dict = cell.to_dict()
+        cell_dict = cell.to_dict(include_sensitive=include_sensitive)
         cell_dict['distance'] = round(float(distance), 2)
         results.append(cell_dict)
 
@@ -181,7 +183,10 @@ def get_celula(id):
     celula = db.session.get(Celula, id)
     if not celula:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify(celula.to_dict())
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+    include_sensitive = (user and user.role == 'admin')
+    return jsonify(celula.to_dict(include_sensitive=include_sensitive))
 
 @api.route('/celulas', methods=['POST'])
 @jwt_required()
@@ -234,7 +239,8 @@ def create_celula():
     
     try:
         db.session.commit()
-        return jsonify(celula.to_dict()), 201
+        include_sensitive = (user and user.role == 'admin')
+        return jsonify(celula.to_dict(include_sensitive=include_sensitive)), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -252,7 +258,10 @@ def update_celula(id):
     
     try:
         db.session.commit()
-        return jsonify(celula.to_dict())
+        current_user_id = get_jwt_identity()
+        user = db.session.get(User, current_user_id)
+        include_sensitive = (user and user.role == 'admin')
+        return jsonify(celula.to_dict(include_sensitive=include_sensitive))
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

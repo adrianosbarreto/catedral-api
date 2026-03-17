@@ -218,7 +218,7 @@ class Membro(db.Model):
             'id': self.id,
             'nome': self.nome,
             'email': self.email if include_sensitive else self.mask_email(self.email),
-            'telefone': self.telefone if include_sensitive else self.mask_phone(self.telefone),
+            'telefone': self.telefone if (include_sensitive or self.tipo == 'visitante') else self.mask_phone(self.telefone),
             'cpf': self.cpf if include_sensitive else self.mask_cpf(self.cpf),
             'estado_civil': self.estado_civil,
             'data_batismo': self.data_batismo.isoformat() if self.data_batismo else None,
@@ -585,7 +585,7 @@ class Celula(db.Model):
     lider = db.relationship('Membro', foreign_keys=[lider_id], backref='celulas_lideradas')
     vice_lider = db.relationship('Membro', foreign_keys=[vice_lider_id], backref='celulas_vice_lideradas')
 
-    def to_dict(self):
+    def to_dict(self, include_sensitive=True):
         return {
             'id': self.id,
             'nome': self.nome,
@@ -613,9 +613,22 @@ class Celula(db.Model):
                 'pastor_id': self.ide.pastor_id,
                 'pastor_nome': self.ide.pastor.nome if self.ide.pastor else None
             } if self.ide else None,
-            'supervisor': {'id': self.supervisor.id, 'nome': self.supervisor.nome, 'telefone': self.supervisor.telefone} if self.supervisor else None,
-            'lider': {'id': self.lider.id, 'nome': self.lider.nome, 'telefone': self.lider.telefone} if self.lider else None,
-            'vice_lider': {'id': self.vice_lider.id, 'nome': self.vice_lider.nome, 'telefone': self.vice_lider.telefone} if self.vice_lider else None,
+            'supervisor': {
+                'id': self.supervisor.id, 
+                'nome': self.supervisor.nome, 
+                'telefone': self.supervisor.telefone if include_sensitive else Membro.mask_phone(self.supervisor.telefone)
+            } if self.supervisor else None,
+            'lider': {
+                'id': self.lider.id, 
+                'nome': self.lider.nome, 
+                'telefone': self.lider.telefone if include_sensitive else Membro.mask_phone(self.lider.telefone)
+            } if self.lider else None,
+            'vice_lider': {
+                'id': self.vice_lider.id, 
+                'nome': self.vice_lider.nome, 
+                'telefone': self.vice_lider.telefone if include_sensitive else Membro.mask_phone(self.vice_lider.telefone)
+            } if self.vice_lider else None,
+            'is_masked': not include_sensitive
         }
 
 class Nucleo(db.Model):
@@ -626,12 +639,12 @@ class Nucleo(db.Model):
     
     celula = db.relationship('Celula', backref=db.backref('nucleos', cascade='all, delete-orphan'))
 
-    def to_dict(self):
+    def to_dict(self, include_sensitive=True):
         return {
             'id': self.id,
             'nome': self.nome,
             'celula_id': self.celula_id,
-            'membros': [m.to_dict() for m in self.membros_nucleo]
+            'membros': [m.to_dict(include_sensitive=include_sensitive) for m in self.membros_nucleo]
         }
 
 class MembroNucleo(db.Model):
